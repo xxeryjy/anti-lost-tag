@@ -1,0 +1,1688 @@
+openapi: 3.0.3
+info:
+  title: SmartTag API
+  version: 0.1.0
+  description: |
+    SmartTag 首版接口规范。
+
+    本规范基于以下设计文档整理：
+    - SmartTag 核心流程与隐私策略
+    - SmartTag 技术方案
+    - SmartTag 接口设计
+    - SmartTag 页面清单与状态流转
+    - SmartTag 接口通用规范
+servers:
+  - url: /api
+    description: SmartTag API Base URL
+tags:
+  - name: Auth
+    description: 主人端认证接口
+  - name: Tags
+    description: 标签激活与主人端管理接口
+  - name: Public
+    description: Finder 公开接口
+  - name: Uploads
+    description: 图片上传接口
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: 注册主人账户
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '200':
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: 登录
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 邮箱未完成验证
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emailNotVerified:
+                  value:
+                    success: false
+                    error:
+                      code: EMAIL_NOT_VERIFIED
+                      message: 邮箱尚未完成验证
+                    meta:
+                      requestId: req_01JX1234567890
+                      timestamp: '2026-06-05T04:12:30.000Z'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: 登出
+      operationId: logoutUser
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: 登出成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /auth/verify-email/request:
+    post:
+      tags:
+        - Auth
+      summary: 请求邮箱验证流程
+      operationId: requestEmailVerification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+      responses:
+        '200':
+          description: 请求已受理，当前不实际发送邮件
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyEmailRequestResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /auth/verify-email/confirm:
+    post:
+      tags:
+        - Auth
+      summary: 使用固定验证码完成邮箱验证
+      operationId: confirmEmailVerification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyEmailConfirmRequest'
+      responses:
+        '200':
+          description: 邮箱验证成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyEmailConfirmResponse'
+        '400':
+          description: 验证码错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCode:
+                  value:
+                    success: false
+                    error:
+                      code: INVALID_VERIFICATION_CODE
+                      message: 验证码错误
+                    meta:
+                      requestId: req_01JX1234567890
+                      timestamp: '2026-06-05T04:12:30.000Z'
+        '409':
+          description: 邮箱已验证
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emailAlreadyVerified:
+                  value:
+                    success: false
+                    error:
+                      code: EMAIL_ALREADY_VERIFIED
+                      message: 邮箱已完成验证
+                    meta:
+                      requestId: req_01JX1234567890
+                      timestamp: '2026-06-05T04:12:30.000Z'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /auth/forgot-password:
+    post:
+      tags:
+        - Auth
+      summary: 请求找回密码流程
+      operationId: requestPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+      responses:
+        '200':
+          description: 请求已受理，当前不实际发送邮件
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForgotPasswordResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /auth/reset-password:
+    post:
+      tags:
+        - Auth
+      summary: 使用固定验证码重置密码
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: 重置成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetPasswordResponse'
+        '400':
+          description: 验证码错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCode:
+                  value:
+                    success: false
+                    error:
+                      code: INVALID_VERIFICATION_CODE
+                      message: 验证码错误
+                    meta:
+                      requestId: req_01JX1234567890
+                      timestamp: '2026-06-05T04:12:30.000Z'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /tags/activate:
+    post:
+      tags:
+        - Tags
+      summary: 激活并绑定标签
+      operationId: activateTag
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivateTagRequest'
+      responses:
+        '200':
+          description: 激活成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivateTagResponse'
+        '400':
+          description: 参数错误或激活码错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidActivationCode:
+                  value:
+                    success: false
+                    error:
+                      code: INVALID_ACTIVATION_CODE
+                      message: 激活码错误
+                    meta:
+                      requestId: req_01JX1234567890
+                      timestamp: '2026-06-05T04:12:30.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: 标签已被绑定
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                tagAlreadyBound:
+                  value:
+                    success: false
+                    error:
+                      code: TAG_ALREADY_BOUND
+                      message: 标签已被绑定
+                    meta:
+                      requestId: req_01JX1234567890
+                      timestamp: '2026-06-05T04:12:30.000Z'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /tags/my:
+    get:
+      tags:
+        - Tags
+      summary: 获取当前账号的标签列表
+      operationId: listMyTags
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: status
+          in: query
+          description: 标签状态筛选
+          required: false
+          schema:
+            $ref: '#/components/schemas/TagStatus'
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyTagsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /tags/{id}/status:
+    patch:
+      tags:
+        - Tags
+      summary: 更新标签状态
+      operationId: updateTagStatus
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TagId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTagStatusRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateTagStatusResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/TagNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /tags/{id}/profile:
+    patch:
+      tags:
+        - Tags
+      summary: 更新标签资料
+      operationId: updateTagProfile
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TagId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTagProfileRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateTagProfileResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: 标签或资料不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /tags/{id}/scans:
+    get:
+      tags:
+        - Tags
+      summary: 获取主人侧扫描历史
+      operationId: listTagScans
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TagId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagScansResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/TagNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /tags/public/{uid}:
+    get:
+      tags:
+        - Public
+      summary: 获取 Finder 公开资料
+      operationId: getPublicTag
+      parameters:
+        - $ref: '#/components/parameters/TagUid'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicTagResponse'
+        '404':
+          $ref: '#/components/responses/TagNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /tags/public/{uid}/scan:
+    post:
+      tags:
+        - Public
+      summary: 记录扫描日志
+      operationId: createPublicScan
+      parameters:
+        - $ref: '#/components/parameters/TagUid'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateScanRequest'
+      responses:
+        '200':
+          description: 记录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateScanResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/TagNotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /tags/public/{uid}/message:
+    post:
+      tags:
+        - Public
+      summary: 提交匿名留言
+      operationId: createPrivacyMessage
+      parameters:
+        - $ref: '#/components/parameters/TagUid'
+        - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePrivacyMessageRequest'
+      responses:
+        '200':
+          description: 提交成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatePrivacyMessageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          description: 当前标签未开启隐私留言
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                privacyDisabled:
+                  value:
+                    success: false
+                    error:
+                      code: FORBIDDEN
+                      message: 当前标签未开启隐私留言
+                    meta:
+                      requestId: req_01JX1234567890
+                      timestamp: '2026-06-05T04:12:30.000Z'
+        '404':
+          $ref: '#/components/responses/TagNotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /uploads/image:
+    post:
+      tags:
+        - Uploads
+      summary: 上传标签资料图片
+      operationId: uploadImage
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: 上传成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadImageResponse'
+        '400':
+          $ref: '#/components/responses/UploadNotAllowed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: smarttag_session
+  parameters:
+    TagId:
+      name: id
+      in: path
+      required: true
+      description: 标签主键 ID
+      schema:
+        type: integer
+        minimum: 1
+    TagUid:
+      name: uid
+      in: path
+      required: true
+      description: 标签公开 UID
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    Page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+    PageSize:
+      name: pageSize
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+    AcceptLanguage:
+      name: Accept-Language
+      in: header
+      required: false
+      description: 用于 Finder 公开接口的语言协商
+      schema:
+        type: string
+        example: zh-CN,zh;q=0.9,en;q=0.8
+  responses:
+    BadRequest:
+      description: 参数错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalidParams:
+              value:
+                success: false
+                error:
+                  code: INVALID_PARAMS
+                  message: 参数错误
+                meta:
+                  requestId: req_01JX1234567890
+                  timestamp: '2026-06-05T04:12:30.000Z'
+    Unauthorized:
+      description: 未登录或登录失效
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            unauthorized:
+              value:
+                success: false
+                error:
+                  code: UNAUTHORIZED
+                  message: 未登录或登录失效
+                meta:
+                  requestId: req_01JX1234567890
+                  timestamp: '2026-06-05T04:12:30.000Z'
+    Forbidden:
+      description: 无权限访问
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            forbidden:
+              value:
+                success: false
+                error:
+                  code: FORBIDDEN
+                  message: 无权限访问该资源
+                meta:
+                  requestId: req_01JX1234567890
+                  timestamp: '2026-06-05T04:12:30.000Z'
+    Conflict:
+      description: 资源冲突
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    TagNotFound:
+      description: 标签不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            tagNotFound:
+              value:
+                success: false
+                error:
+                  code: TAG_NOT_FOUND
+                  message: 标签不存在
+                meta:
+                  requestId: req_01JX1234567890
+                  timestamp: '2026-06-05T04:12:30.000Z'
+    RateLimited:
+      description: 请求过于频繁
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            rateLimited:
+              value:
+                success: false
+                error:
+                  code: RATE_LIMITED
+                  message: 请求过于频繁
+                meta:
+                  requestId: req_01JX1234567890
+                  timestamp: '2026-06-05T04:12:30.000Z'
+    UploadNotAllowed:
+      description: 上传文件不符合要求
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            uploadNotAllowed:
+              value:
+                success: false
+                error:
+                  code: UPLOAD_NOT_ALLOWED
+                  message: 上传文件不符合要求
+                meta:
+                  requestId: req_01JX1234567890
+                  timestamp: '2026-06-05T04:12:30.000Z'
+    InternalError:
+      description: 服务器内部错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            internalError:
+              value:
+                success: false
+                error:
+                  code: INTERNAL_ERROR
+                  message: 服务器内部错误
+                meta:
+                  requestId: req_01JX1234567890
+                  timestamp: '2026-06-05T04:12:30.000Z'
+  schemas:
+    PreferredLocale:
+      type: string
+      enum:
+        - ZH_CN
+        - EN
+        - JA
+    TagStatus:
+      type: string
+      enum:
+        - INACTIVE
+        - ACTIVE
+        - LOST
+    ProfileCategory:
+      type: string
+      enum:
+        - PET
+        - ITEM
+    PetKind:
+      type: string
+      enum:
+        - CAT
+        - DOG
+        - OTHER
+    ProfileSex:
+      type: string
+      enum:
+        - MALE
+        - FEMALE
+        - UNKNOWN
+    LocationSource:
+      type: string
+      enum:
+        - GPS
+        - IP
+    NotificationStatus:
+      type: string
+      enum:
+        - PENDING
+        - SENT
+        - FAILED
+        - SKIPPED
+    DeliveryStatus:
+      type: string
+      enum:
+        - PENDING
+        - SENT
+        - FAILED
+    Meta:
+      type: object
+      required:
+        - requestId
+        - timestamp
+      properties:
+        requestId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    ErrorBody:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - false
+        error:
+          $ref: '#/components/schemas/ErrorBody'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    Pagination:
+      type: object
+      required:
+        - page
+        - pageSize
+        - total
+        - totalPages
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+    UserSummary:
+      type: object
+      required:
+        - id
+        - email
+        - emailVerified
+        - preferredLocale
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        emailVerified:
+          type: boolean
+        preferredLocale:
+          $ref: '#/components/schemas/PreferredLocale'
+        timezone:
+          type: string
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - preferredLocale
+        - timezone
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+        preferredLocale:
+          $ref: '#/components/schemas/PreferredLocale'
+        timezone:
+          type: string
+          example: Asia/Shanghai
+    RegisterResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - user
+            - requiresEmailVerification
+            - verificationMethod
+          properties:
+            user:
+              $ref: '#/components/schemas/UserSummary'
+            requiresEmailVerification:
+              type: boolean
+            verificationMethod:
+              type: string
+              enum:
+                - MOCK_CODE
+        meta:
+          $ref: '#/components/schemas/Meta'
+    EmailRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+    LoginResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - user
+          properties:
+            user:
+              $ref: '#/components/schemas/UserSummary'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    LogoutResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - loggedOut
+          properties:
+            loggedOut:
+              type: boolean
+        meta:
+          $ref: '#/components/schemas/Meta'
+    VerifyEmailConfirmRequest:
+      type: object
+      required:
+        - email
+        - code
+      properties:
+        email:
+          type: string
+          format: email
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+    VerifyEmailRequestResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - accepted
+            - mockCode
+          properties:
+            accepted:
+              type: boolean
+            mockCode:
+              type: string
+              example: '123456'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    VerifyEmailConfirmResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - verified
+          properties:
+            verified:
+              type: boolean
+        meta:
+          $ref: '#/components/schemas/Meta'
+    ForgotPasswordResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - accepted
+            - mockCode
+          properties:
+            accepted:
+              type: boolean
+            mockCode:
+              type: string
+              example: '123456'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    ResetPasswordRequest:
+      type: object
+      required:
+        - email
+        - code
+        - newPassword
+      properties:
+        email:
+          type: string
+          format: email
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 128
+    ResetPasswordResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - reset
+          properties:
+            reset:
+              type: boolean
+        meta:
+          $ref: '#/components/schemas/Meta'
+    TagSummary:
+      type: object
+      required:
+        - id
+        - uid
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+        uid:
+          type: string
+        status:
+          $ref: '#/components/schemas/TagStatus'
+        rewardText:
+          type: string
+          nullable: true
+        activatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ActivateTagRequest:
+      type: object
+      required:
+        - uid
+        - activationCode
+      properties:
+        uid:
+          type: string
+        activationCode:
+          type: string
+          minLength: 4
+          maxLength: 64
+    ActivateTagResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - tag
+          properties:
+            tag:
+              $ref: '#/components/schemas/TagSummary'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    MyTagItem:
+      type: object
+      required:
+        - id
+        - uid
+        - status
+        - displayName
+        - category
+        - updatedAt
+      properties:
+        id:
+          type: integer
+        uid:
+          type: string
+        status:
+          $ref: '#/components/schemas/TagStatus'
+        displayName:
+          type: string
+        photoUrl:
+          type: string
+          format: uri
+          nullable: true
+        category:
+          $ref: '#/components/schemas/ProfileCategory'
+        updatedAt:
+          type: string
+          format: date-time
+        latestScanAt:
+          type: string
+          format: date-time
+          nullable: true
+    MyTagsResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - list
+            - pagination
+          properties:
+            list:
+              type: array
+              items:
+                $ref: '#/components/schemas/MyTagItem'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    UpdateTagStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/TagStatus'
+        rewardText:
+          type: string
+          nullable: true
+          maxLength: 255
+      description: |
+        首版仅允许主人在 ACTIVE 与 LOST 之间切换。
+        INACTIVE 通常只出现在未绑定阶段，不应由主人端主动回写。
+    UpdateTagStatusResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - tag
+          properties:
+            tag:
+              type: object
+              required:
+                - id
+                - uid
+                - status
+                - updatedAt
+              properties:
+                id:
+                  type: integer
+                uid:
+                  type: string
+                status:
+                  $ref: '#/components/schemas/TagStatus'
+                rewardText:
+                  type: string
+                  nullable: true
+                updatedAt:
+                  type: string
+                  format: date-time
+        meta:
+          $ref: '#/components/schemas/Meta'
+    UpdateTagProfileRequest:
+      type: object
+      required:
+        - category
+        - displayName
+        - privacyMode
+      properties:
+        category:
+          $ref: '#/components/schemas/ProfileCategory'
+        petKind:
+          allOf:
+            - $ref: '#/components/schemas/PetKind'
+          nullable: true
+        customLabel:
+          type: string
+          nullable: true
+          maxLength: 100
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        photoUrl:
+          type: string
+          format: uri
+          nullable: true
+        breed:
+          type: string
+          nullable: true
+          maxLength: 100
+        sex:
+          allOf:
+            - $ref: '#/components/schemas/ProfileSex'
+          nullable: true
+        isNeutered:
+          type: boolean
+          nullable: true
+        medicalNote:
+          type: string
+          nullable: true
+          maxLength: 1000
+        hasMicrochip:
+          type: boolean
+        microchipCode:
+          type: string
+          nullable: true
+          maxLength: 100
+        privacyMode:
+          type: boolean
+          description: true 表示 Privacy Mode，false 表示 Direct Contact
+        ownerPhone:
+          type: string
+          nullable: true
+          maxLength: 50
+        backupPhone:
+          type: string
+          nullable: true
+          maxLength: 50
+        notificationEmail:
+          type: string
+          format: email
+          nullable: true
+        homeAddress:
+          type: string
+          nullable: true
+          maxLength: 255
+        showHomeAddress:
+          type: boolean
+      description: |
+        当 category = PET 时，petKind 建议必填。
+        当 category = ITEM 时，customLabel 建议填写自定义物品名称。
+    TagProfile:
+      type: object
+      required:
+        - tagId
+        - category
+        - displayName
+        - hasMicrochip
+        - privacyMode
+        - showHomeAddress
+        - createdAt
+        - updatedAt
+      properties:
+        tagId:
+          type: integer
+        category:
+          $ref: '#/components/schemas/ProfileCategory'
+        petKind:
+          allOf:
+            - $ref: '#/components/schemas/PetKind'
+          nullable: true
+        customLabel:
+          type: string
+          nullable: true
+        displayName:
+          type: string
+        photoUrl:
+          type: string
+          format: uri
+          nullable: true
+        breed:
+          type: string
+          nullable: true
+        sex:
+          allOf:
+            - $ref: '#/components/schemas/ProfileSex'
+          nullable: true
+        isNeutered:
+          type: boolean
+          nullable: true
+        medicalNote:
+          type: string
+          nullable: true
+        hasMicrochip:
+          type: boolean
+        microchipCode:
+          type: string
+          nullable: true
+        privacyMode:
+          type: boolean
+        ownerPhone:
+          type: string
+          nullable: true
+        backupPhone:
+          type: string
+          nullable: true
+        notificationEmail:
+          type: string
+          format: email
+          nullable: true
+        homeAddress:
+          type: string
+          nullable: true
+        showHomeAddress:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UpdateTagProfileResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - profile
+          properties:
+            profile:
+              $ref: '#/components/schemas/TagProfile'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    ScanLogItem:
+      type: object
+      required:
+        - id
+        - scannedAt
+        - locationSource
+        - tagStatusAtScan
+        - notificationSuppressed
+        - notificationStatus
+      properties:
+        id:
+          type: integer
+        scannedAt:
+          type: string
+          format: date-time
+        locationSource:
+          $ref: '#/components/schemas/LocationSource'
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        region:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        mapUrl:
+          type: string
+          format: uri
+          nullable: true
+        tagStatusAtScan:
+          $ref: '#/components/schemas/TagStatus'
+        notificationSuppressed:
+          type: boolean
+        notificationStatus:
+          $ref: '#/components/schemas/NotificationStatus'
+        notificationSentAt:
+          type: string
+          format: date-time
+          nullable: true
+    TagScansResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - list
+            - pagination
+          properties:
+            list:
+              type: array
+              items:
+                $ref: '#/components/schemas/ScanLogItem'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    PublicTag:
+      type: object
+      required:
+        - uid
+        - status
+        - isLost
+      properties:
+        uid:
+          type: string
+        status:
+          $ref: '#/components/schemas/TagStatus'
+        isLost:
+          type: boolean
+        rewardText:
+          type: string
+          nullable: true
+    PublicProfile:
+      type: object
+      required:
+        - category
+        - displayName
+        - privacyMode
+        - canSendMessage
+        - canShowOwnerPhone
+      properties:
+        category:
+          $ref: '#/components/schemas/ProfileCategory'
+        petKind:
+          allOf:
+            - $ref: '#/components/schemas/PetKind'
+          nullable: true
+        customLabel:
+          type: string
+          nullable: true
+        displayName:
+          type: string
+        photoUrl:
+          type: string
+          format: uri
+          nullable: true
+        medicalNote:
+          type: string
+          nullable: true
+        hasMicrochip:
+          type: boolean
+        microchipCode:
+          type: string
+          nullable: true
+        privacyMode:
+          type: boolean
+        ownerPhone:
+          type: string
+          nullable: true
+        backupPhone:
+          type: string
+          nullable: true
+        homeAddress:
+          type: string
+          nullable: true
+        canSendMessage:
+          type: boolean
+        canShowOwnerPhone:
+          type: boolean
+    PublicTagResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - tag
+            - profile
+            - pageState
+          properties:
+            pageState:
+              type: string
+              enum:
+                - FINDER_ACTIVE
+                - FINDER_LOST
+            tag:
+              $ref: '#/components/schemas/PublicTag'
+            profile:
+              $ref: '#/components/schemas/PublicProfile'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    CreateScanRequest:
+      type: object
+      required:
+        - locationSource
+      properties:
+        latitude:
+          type: number
+          format: double
+          nullable: true
+        longitude:
+          type: number
+          format: double
+          nullable: true
+        locationSource:
+          $ref: '#/components/schemas/LocationSource'
+        locale:
+          $ref: '#/components/schemas/PreferredLocale'
+      description: |
+        当 locationSource = GPS 时，latitude 和 longitude 应尽量传入。
+        当定位失败时允许只传 locationSource = IP。
+    CreateScanResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - scanLogId
+            - notificationSuppressed
+          properties:
+            scanLogId:
+              type: integer
+            notificationSuppressed:
+              type: boolean
+            notificationStatus:
+              $ref: '#/components/schemas/NotificationStatus'
+            mapUrl:
+              type: string
+              format: uri
+              nullable: true
+        meta:
+          $ref: '#/components/schemas/Meta'
+    CreatePrivacyMessageRequest:
+      type: object
+      required:
+        - message
+      properties:
+        scanLogId:
+          type: integer
+          nullable: true
+        finderName:
+          type: string
+          nullable: true
+          maxLength: 100
+        finderContact:
+          type: string
+          nullable: true
+          maxLength: 255
+        message:
+          type: string
+          minLength: 1
+          maxLength: 1000
+    CreatePrivacyMessageResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - messageId
+            - deliveryStatus
+          properties:
+            messageId:
+              type: integer
+            deliveryStatus:
+              $ref: '#/components/schemas/DeliveryStatus'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    UploadImageResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - url
+          properties:
+            url:
+              type: string
+              format: uri
+        meta:
+          $ref: '#/components/schemas/Meta'

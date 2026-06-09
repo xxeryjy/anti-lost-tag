@@ -1,0 +1,125 @@
+
+智能防丢牌需求文档
+📝 项目名称：SmartTag (智能防丢牌) 需求文档 
+1. 项目概述 (Overview)
+这是一个基于 Web 的被动式防丢系统。用户购买印有唯一二维码的铭牌，绑定宠物/物品信息。当宠物走失，捡到者扫描二维码，系统会自动请求地理位置，展示失主联系方式，并立刻向失主发送带有地图定位的邮件提醒。
+核心价值： 低成本、无源（不需要电池）、被动定位、无需下载 App。
+要和官网的整体风格相符
+要能跳回官网
+2. 用户角色 (User Roles)
+2.1 物品主人 (Owner)
+购买了防丢牌的用户。
+需求：注册账户，激活牌子，编辑信息，在丢失时收到精准通知。
+2.2 发现者 (Finder/Good Samaritan)
+路边捡到宠物/物品的陌生人。
+需求：不需要下载任何App，不需要注册，扫码即看，一键联系。
+3. 业务流程图 (Core User Flow)
+激活： 主人收到空牌 -> 扫码 -> 注册/登录 ->扫码绑定 -> 填写宠物信息 -> 激活成功。
+丢失： 宠物走失 -> 主人可远程开启“丢失模式”（可选高亮显示悬赏）。
+发现： 发现者扫码 -> 浏览器弹出“允许获取位置” -> 发现者点击“允许”\“拒绝” -> 看到宠物详情页。
+通知： 系统后台捕获经纬度 -> 生成 Google Maps 链接 -> 触发邮件发给主人。
+4. 功能需求详情 (Functional Requirements)
+模块一：用户认证系统 (Auth)
+注册/登录：
+支持“邮箱 + 密码”注册。
+账号管理： 修改密码、修改通知邮箱。
+模块二：防丢牌管理 (Tag Management) - 主人端
+此模块对应数据库中的 tags 表和 pets 表。
+激活新牌子 (Activate Tag)：
+浏览器扫码识别 ID 自动跳转激活页。
+扫码后有账号就登录，没账号就注册
+扫码如果用户是登录状态，弹出是否添加防丢牌。
+编辑信息 (Edit Profile)：
+宠物头像： 上传/裁剪。
+兼容猫狗并可以自定义物品名称
+基本信息： 名字、品种、性别、绝育状态。
+医疗备注 (Medical Alert)： 红字高亮显示（例如：Needs Meds / Diabetic），是否有植入微芯片，微芯片信息。
+联系人信息： 主人电话、备用电话、家庭地址（可选择隐藏）。
+隐私开关 (Privacy Toggle)：
+Direct Contact (直接联系模式)： 扫码直接显示电话号码。
+Privacy Mode (隐私模式)： 扫码不显示电话，只显示“给主人发消息”的表单（防骚扰）。
+模块三：扫码详情页 (Public Profile) - 发现者端
+这是项目的“门面”，要求加载速度极快，Mobile First 设计。
+位置请求 (关键逻辑)：
+页面加载时，立即调用浏览器 navigator.geolocation API。
+提示语："Please allow location access to help [Pet Name] find its way home!" (请允许位置权限以帮助[宠物名]回家！)
+逻辑分支：
+如果允许：获取高精度 GPS 坐标 -> 存入数据库 -> 触发邮件。
+如果不允许：获取 IP 地址 -> 解析大概城市位置 -> 存入数据库 -> 触发邮件。
+信息展示：
+顶部：宠物大图 + 名字。
+中部：医疗警示 (如果有)。
+底部：操作按钮。
+Call Owner (点击直接拨号 tel:xxx)。
+Email Owner (点击跳转邮件或填表)。
+Show Location (点击打开 Maps 导航到当前位置，用于把狗送到收容所)。
+模块四：通知与定位系统 (Alert System) - 后端核心
+邮件提醒 (Email Alert)：
+当扫描发生且获取到位置后，立即通过 SMTP (如 SendGrid/AWS SES) 发送邮件。
+邮件标题：[URGENT] Your pet tag was scanned!
+邮件内容：
+扫描时间 (转换为主人所在时区)。
+大概位置 (例如：New York, NY)。
+查看地图按钮： 链接到 Google Maps，带上经纬度参数。
+设备信息 (例如：iPhone, Safari) - 帮助判断是否是误扫。
+扫描记录 (Scan History)：
+在主人的管理后台，显示一个列表：时间、IP/GPS、地图链接。
+5. 数据库设计 (Prisma 简易版)
+基于你现有的数据库，建议表结构如下：
+Code snippet
+// 用户表
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  tags      Tag[]    // 一对多
+}
+
+// 牌子表
+model Tag {
+  id           Int       @id @default(autoincrement())
+  uid          String    @unique // 二维码上的短链ID，如 "abc12"
+  activationCode String  // 包装上的校验码
+  status       String    // ACTIVE, INACTIVE, LOST
+  
+  // 宠物展示信息
+  petName      String?
+  petPhoto     String?
+  ownerPhone   String?
+  medicalNote  String?
+  privacyMode  Boolean   @default(false)
+  
+  userId       Int?
+  user         User?     @relation(fields: [userId], references: [id])
+  scans        ScanLog[] // 扫描记录
+}
+
+// 扫描日志表 (用于地图定位)
+model ScanLog {
+  id        Int      @id @default(autoincrement())
+  tagId     Int
+  tag       Tag      @relation(fields: [tagId], references: [id])
+  scannedAt DateTime @default(now())
+  latitude  Float?
+  longitude Float?
+  ipAddress String?
+  userAgent String?    // 记录手机型号
+}
+6. 非功能性需求 (UX & Technical)
+二维码生成逻辑：
+URL 必须极短，例如 pet.com/t/Ax9z。URL 越短，二维码图案越简单，磨损后越容易被扫出来（这对宠物牌至关重要）。
+已生成
+地图服务：
+前端定位：使用 HTML5 Geolocation (免费)。
+邮件地图展示：使用 Google Maps Static API (生成一张带红点的图片) 或直接生成 https://maps.google.com/?q=lat,lng 的超链接。
+国际化与时区：
+时间显示必须处理好时区（存储用 UTC，展示用客户端本地时间）。
+防骚扰：
+对同一个 IP 在 1 分钟内的重复扫描，只发一封邮件，防止邮箱爆炸。
+7. 交互设计建议 (UI Sketch)
+色调： 警示色（橙色/红色）与 信任色（蓝色/白色）搭配。
+首屏 (Finder View)：
+不要有任何干扰元素。
+如果宠物状态是 "LOST" (丢失模式)，页面顶部显示巨大的红色横幅："I AM LOST, PLEASE HELP!"
+隐私保护文案：
+在请求位置权限时，文案要温情："Allowing location helps notify the worried owner immediately." (允许定位可以立刻通知焦急的主人。)
