@@ -155,6 +155,10 @@ export function findUserByEmail(email: string) {
   return users.find((user) => user.email.toLowerCase() === email.toLowerCase()) || null
 }
 
+export function findUserById(id: number) {
+  return users.find((user) => user.id === id) || null
+}
+
 export function createUser(email: string, password: string, preferredLocale: MockUser['preferredLocale']) {
   const user: MockUser = {
     id: users.length + 1,
@@ -258,6 +262,10 @@ export function getProfileByTagId(id: number) {
 export function getScansByTagId(id: number) {
   const ids = tagScans[id] || []
   return scans.filter((scan) => ids.includes(scan.id))
+}
+
+export function getPrivacyMessagesByTagId(id: number) {
+  return messages.filter((message) => message.tagId === id)
 }
 
 export function appendScan(uid: string, payload: Partial<ScanLogItem>) {

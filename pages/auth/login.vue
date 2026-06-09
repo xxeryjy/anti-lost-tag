@@ -2,6 +2,7 @@
 const { t } = useI18n()
 const localePath = useLocalePath()
 const route = useRoute()
+const authStore = useAuthStore()
 const form = reactive({
   email: 'owner@smarttag.local',
   password: 'Password123'
@@ -9,7 +10,7 @@ const form = reactive({
 const { isLoading, errorMessage, successMessage, run, setSuccess } = useApiRequest()
 
 async function submitLogin() {
-  const data = await run<{ user: { email: string } }>(() => $fetch('/api/auth/login', {
+  const data = await run<{ user: { email: string; emailVerifiedAt: string | null } }>(() => $fetch('/api/auth/login', {
     method: 'POST',
     body: form
   }))
@@ -19,6 +20,7 @@ async function submitLogin() {
   }
 
   setSuccess(t('auth.loginSuccess'))
+  authStore.applyUser(data.user)
   const redirectTo = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard/tags'
   await navigateTo(localePath(redirectTo))
 }

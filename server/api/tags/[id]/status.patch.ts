@@ -4,7 +4,8 @@ import { getMockSessionUserId } from '~/server/utils/session'
 import type { TagStatus } from '~/types/smarttag'
 
 export default defineEventHandler(async (event) => {
-  if (!getMockSessionUserId(event)) {
+  const userId = getMockSessionUserId(event)
+  if (!userId) {
     fail(401, 'UNAUTHORIZED', '请先登录')
   }
 
@@ -14,6 +15,9 @@ export default defineEventHandler(async (event) => {
 
   if (!tag) {
     fail(404, 'TAG_NOT_FOUND', '标签不存在')
+  }
+  if (tag.userId !== userId) {
+    fail(403, 'FORBIDDEN', '无权修改该标签状态')
   }
   if (!body.status) {
     fail(400, 'BAD_REQUEST', '标签状态不能为空')

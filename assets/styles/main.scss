@@ -521,6 +521,13 @@ textarea {
   gap: 18px;
 }
 
+.finder-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
 .finder-meta,
 .summary-grid {
   display: grid;
@@ -533,6 +540,43 @@ textarea {
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(36, 51, 47, 0.08);
+}
+
+.finder-contact-list {
+  margin-top: 12px;
+}
+
+.finder-message-form {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(36, 51, 47, 0.08);
+}
+
+.owner-message-card {
+  display: grid;
+  gap: 10px;
+}
+
+.message-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.owner-message-body {
+  color: var(--text);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.finder-form-title {
+  margin: 0;
+  color: var(--brand-deep);
+  font-size: 22px;
 }
 
 .site-footer {
@@ -1486,9 +1530,14 @@ textarea {
   .card-grid,
   .page-grid,
   .form-grid.two-columns,
+  .finder-heading,
   .finder-meta,
   .summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .finder-heading {
+    display: grid;
   }
 
   .site-header {

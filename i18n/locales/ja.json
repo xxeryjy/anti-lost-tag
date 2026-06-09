@@ -175,7 +175,18 @@
     "backupPhone": "予備電話",
     "email": "通知メール",
     "showLocation": "Show Location",
-    "sendPrivacyMessage": "匿名メッセージへ進む"
+    "sendPrivacyMessage": "匿名メッセージへ進む",
+    "loginToActivate": "ログインして有効化",
+    "registerToActivate": "所有者アカウントを作成",
+    "ownerPreview": "Owner Preview",
+    "homeAddress": "公開住所",
+    "messageTitle": "所有者へメッセージ",
+    "finderName": "あなたの名前（任意）",
+    "finderContact": "連絡先（任意）",
+    "message": "メッセージ内容",
+    "sendMessage": "メッセージを送信",
+    "messageSuccess": "メッセージを送信しました。所有者に手がかりが届きます。",
+    "backToOwnerDetail": "タグ詳細へ戻る"
   },
   "tag": {
     "activateEyebrow": "Activate Tag",
@@ -221,6 +232,10 @@
     "disableLost": "LOST モードを解除",
     "lostEnabled": "LOST モードを有効にしました。",
     "lostDisabled": "LOST モードを解除しました。",
+    "messagesTitle": "匿名メッセージ",
+    "emptyMessages": "匿名メッセージはまだありません。",
+    "anonymousFinder": "匿名の発見者",
+    "finderContact": "発見者の連絡先",
     "scansTitle": "最近のスキャン",
     "emptyScans": "まだスキャン記録はありません。"
   }

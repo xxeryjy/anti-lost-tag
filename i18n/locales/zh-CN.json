@@ -175,7 +175,18 @@
     "backupPhone": "备用电话",
     "email": "通知邮箱",
     "showLocation": "Show Location",
-    "sendPrivacyMessage": "进入隐私留言流程"
+    "sendPrivacyMessage": "进入隐私留言流程",
+    "loginToActivate": "登录后激活",
+    "registerToActivate": "注册主人账号",
+    "ownerPreview": "Owner Preview",
+    "homeAddress": "公开地址",
+    "messageTitle": "给主人留言",
+    "finderName": "你的称呼（选填）",
+    "finderContact": "联系方式（选填）",
+    "message": "留言内容",
+    "sendMessage": "发送留言",
+    "messageSuccess": "留言已提交，主人会收到这条线索。",
+    "backToOwnerDetail": "返回标签详情"
   },
   "tag": {
     "activateEyebrow": "Activate Tag",
@@ -221,6 +232,10 @@
     "disableLost": "关闭丢失模式",
     "lostEnabled": "已开启丢失模式。",
     "lostDisabled": "已关闭丢失模式。",
+    "messagesTitle": "匿名留言",
+    "emptyMessages": "暂无匿名留言。",
+    "anonymousFinder": "匿名发现者",
+    "finderContact": "发现者联系方式",
     "scansTitle": "最近扫描记录",
     "emptyScans": "暂无扫描记录。"
   }

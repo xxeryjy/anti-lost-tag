@@ -175,7 +175,18 @@
     "backupPhone": "Backup phone",
     "email": "Notification email",
     "showLocation": "Show Location",
-    "sendPrivacyMessage": "Enter private message flow"
+    "sendPrivacyMessage": "Enter private message flow",
+    "loginToActivate": "Login to activate",
+    "registerToActivate": "Create owner account",
+    "ownerPreview": "Owner Preview",
+    "homeAddress": "Public address",
+    "messageTitle": "Message the owner",
+    "finderName": "Your name (optional)",
+    "finderContact": "Contact info (optional)",
+    "message": "Message",
+    "sendMessage": "Send message",
+    "messageSuccess": "Message submitted. The owner will receive this clue.",
+    "backToOwnerDetail": "Back to tag detail"
   },
   "tag": {
     "activateEyebrow": "Activate Tag",
@@ -221,6 +232,10 @@
     "disableLost": "Disable lost mode",
     "lostEnabled": "Lost mode enabled.",
     "lostDisabled": "Lost mode disabled.",
+    "messagesTitle": "Private messages",
+    "emptyMessages": "No private messages yet.",
+    "anonymousFinder": "Anonymous finder",
+    "finderContact": "Finder contact",
     "scansTitle": "Recent scans",
     "emptyScans": "No scan records yet."
   }

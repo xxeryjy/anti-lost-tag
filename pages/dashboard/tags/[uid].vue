@@ -1,19 +1,25 @@
 <script setup lang="ts">
-import type { ScanLogItem, TagStatus } from '~/types/smarttag'
+import type { PrivacyMessageRecord, ScanLogItem, TagStatus } from '~/types/smarttag'
 
 const route = useRoute()
 const { t } = useI18n()
 const localePath = useLocalePath()
 const { isLoading, errorMessage, successMessage, run, setSuccess } = useApiRequest()
-const { isLoadingTags, loadError, loadMyTags, findByUid, loadScans } = useOwnerTags()
+const { isLoadingTags, loadError, loadMyTags, findByUid, loadScans, loadMessages } = useOwnerTags()
 const scans = ref<ScanLogItem[]>([])
+const messages = ref<PrivacyMessageRecord[]>([])
 const uid = computed(() => String(route.params.uid))
 const currentTag = computed(() => findByUid(uid.value))
 
 async function loadPageData() {
   await loadMyTags()
   if (currentTag.value) {
-    scans.value = await loadScans(currentTag.value.id).catch(() => [])
+    const [scanItems, messageItems] = await Promise.all([
+      loadScans(currentTag.value.id).catch(() => []),
+      loadMessages(currentTag.value.id).catch(() => [])
+    ])
+    scans.value = scanItems
+    messages.value = messageItems
   }
 }
 
@@ -84,7 +90,7 @@ useHead({
           <NuxtLink class="solid-button" :to="localePath(`/tags/${currentTag.uid}/edit`)">
             {{ t('dashboard.editProfile') }}
           </NuxtLink>
-          <NuxtLink class="outline-button" :to="localePath(`/t/${currentTag.uid}`)">
+          <NuxtLink class="outline-button" :to="`${localePath(`/t/${currentTag.uid}`)}?preview=1`">
             {{ t('dashboard.previewFinder') }}
           </NuxtLink>
           <button
@@ -108,6 +114,26 @@ useHead({
         </div>
         <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
         <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>
+
+        <div class="content-section">
+          <h2 class="section-title">{{ t('dashboard.messagesTitle') }}</h2>
+          <div v-if="!messages.length" class="state-card compact-state">
+            <p class="section-copy">{{ t('dashboard.emptyMessages') }}</p>
+          </div>
+          <div v-else class="card-grid">
+            <article v-for="message in messages" :key="message.id" class="state-card owner-message-card">
+              <div class="message-card-header">
+                <strong>{{ message.finderName || t('dashboard.anonymousFinder') }}</strong>
+                <span class="status-chip">{{ message.deliveryStatus }}</span>
+              </div>
+              <p class="muted-text">{{ message.createdAt }}</p>
+              <p class="owner-message-body">{{ message.message }}</p>
+              <p v-if="message.finderContact" class="muted-text">
+                {{ t('dashboard.finderContact') }}: {{ message.finderContact }}
+              </p>
+            </article>
+          </div>
+        </div>
 
         <div class="content-section">
           <h2 class="section-title">{{ t('dashboard.scansTitle') }}</h2>

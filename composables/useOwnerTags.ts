@@ -1,4 +1,4 @@
-import type { ScanLogItem, TagRecord } from '~/types/smarttag'
+import type { PrivacyMessageRecord, ScanLogItem, TagRecord } from '~/types/smarttag'
 
 export function useOwnerTags() {
   const localePath = useLocalePath()
@@ -38,12 +38,18 @@ export function useOwnerTags() {
     return response.data.items
   }
 
+  async function loadMessages(tagId: number) {
+    const response = await $fetch<{ success: true; data: { items: PrivacyMessageRecord[] } }>(`/api/tags/${tagId}/messages`)
+    return response.data.items
+  }
+
   return {
     tags,
     isLoadingTags,
     loadError,
     loadMyTags,
     findByUid,
-    loadScans
+    loadScans,
+    loadMessages
   }
 }

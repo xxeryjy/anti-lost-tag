@@ -1,4 +1,4 @@
-import { findTagById, getScansByTagId } from '~/server/services/mock-data'
+import { findTagById, getPrivacyMessagesByTagId } from '~/server/services/mock-data'
 import { fail, ok } from '~/server/utils/api-response'
 import { getMockSessionUserId } from '~/server/utils/session'
 
@@ -14,10 +14,10 @@ export default defineEventHandler((event) => {
     fail(404, 'TAG_NOT_FOUND', '标签不存在')
   }
   if (tag.userId !== userId) {
-    fail(403, 'FORBIDDEN', '无权查看该标签扫描记录')
+    fail(403, 'FORBIDDEN', '无权查看该标签留言')
   }
 
   return ok({
-    items: getScansByTagId(id)
+    items: getPrivacyMessagesByTagId(id)
   })
 })

@@ -12,17 +12,26 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody<{ finderName?: string | null; finderContact?: string | null; message?: string }>(event)
-  if (!body.message) {
+  const message = body.message?.trim()
+  if (!message) {
     fail(400, 'BAD_REQUEST', '留言内容不能为空')
+  }
+  if (message.length > 800) {
+    fail(400, 'BAD_REQUEST', '留言内容不能超过 800 个字符')
   }
 
   const record = createPrivacyMessage(uid, {
-    finderName: body.finderName || null,
-    finderContact: body.finderContact || null,
-    message: body.message
+    finderName: body.finderName?.trim() || null,
+    finderContact: body.finderContact?.trim() || null,
+    message
   })
+  if (!record) {
+    fail(500, 'MESSAGE_CREATE_FAILED', '留言保存失败，请稍后重试')
+  }
 
   return ok({
+    messageId: record.id,
+    deliveryStatus: record.deliveryStatus,
     messageRecord: record
   })
 })
