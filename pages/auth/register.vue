@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { t, locale } = useI18n()
+const localePath = useLocalePath()
 const form = reactive({
   email: 'new-owner@smarttag.local',
   password: 'Password123',
@@ -9,24 +10,36 @@ const verifyForm = reactive({
   email: 'new-owner@smarttag.local',
   code: '123456'
 })
-const responseText = ref('')
+const step = ref<'REGISTER' | 'VERIFY'>('REGISTER')
+const { isLoading, errorMessage, successMessage, run, setSuccess } = useApiRequest()
 
 async function submitRegister() {
-  const response = await $fetch('/api/auth/register', {
+  const data = await run<{ nextStep: string }>(() => $fetch('/api/auth/register', {
     method: 'POST',
     body: form
-  }).catch((error) => error.data || error)
+  }))
 
-  responseText.value = JSON.stringify(response, null, 2)
+  if (!data) {
+    return
+  }
+
+  verifyForm.email = form.email
+  step.value = 'VERIFY'
+  setSuccess(t('auth.registerSuccess'))
 }
 
 async function confirmEmail() {
-  const response = await $fetch('/api/auth/verify-email/confirm', {
+  const data = await run<{ user: { email: string } }>(() => $fetch('/api/auth/verify-email/confirm', {
     method: 'POST',
     body: verifyForm
-  }).catch((error) => error.data || error)
+  }))
 
-  responseText.value = JSON.stringify(response, null, 2)
+  if (!data) {
+    return
+  }
+
+  setSuccess(t('auth.verifySuccess'))
+  await navigateTo(localePath(`/auth/login?redirect=${encodeURIComponent('/dashboard/tags')}`))
 }
 
 useHead({
@@ -49,7 +62,9 @@ useHead({
             {{ t('auth.password') }}
             <input v-model="form.password" type="password" />
           </label>
-          <button class="solid-button" type="submit">{{ t('auth.registerAction') }}</button>
+          <button class="solid-button" type="submit" :disabled="isLoading || step === 'VERIFY'">
+            {{ step === 'VERIFY' ? t('auth.registeredAction') : t('auth.registerAction') }}
+          </button>
         </form>
       </div>
 
@@ -65,10 +80,13 @@ useHead({
             {{ t('auth.verificationCode') }}
             <input v-model="verifyForm.code" type="text" />
           </label>
-          <button class="solid-button" type="submit">{{ t('auth.verifyAction') }}</button>
+          <button class="solid-button" type="submit" :disabled="isLoading || step !== 'VERIFY'">
+            {{ isLoading && step === 'VERIFY' ? t('common.submitting') : t('auth.verifyAction') }}
+          </button>
         </form>
         <p class="form-note">{{ t('auth.mockCodeHint') }}</p>
-        <pre v-if="responseText" class="response-box">{{ responseText }}</pre>
+        <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
+        <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>
       </div>
     </section>
   </div>

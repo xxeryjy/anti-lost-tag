@@ -1,5 +1,8 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
+  experimental: {
+    appManifest: false
+  },
   css: ['~/assets/styles/main.scss'],
   modules: ['@pinia/nuxt', '@nuxtjs/i18n'],
   runtimeConfig: {

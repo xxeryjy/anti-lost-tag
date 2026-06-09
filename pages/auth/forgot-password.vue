@@ -1,17 +1,23 @@
 <script setup lang="ts">
 const { t } = useI18n()
+const localePath = useLocalePath()
 const form = reactive({
   email: 'owner@smarttag.local'
 })
-const responseText = ref('')
+const { isLoading, errorMessage, successMessage, run, setSuccess } = useApiRequest()
 
 async function submitForgotPassword() {
-  const response = await $fetch('/api/auth/forgot-password', {
+  const data = await run<{ accepted: boolean; mockMode: boolean }>(() => $fetch('/api/auth/forgot-password', {
     method: 'POST',
     body: form
-  }).catch((error) => error.data || error)
+  }))
 
-  responseText.value = JSON.stringify(response, null, 2)
+  if (!data) {
+    return
+  }
+
+  setSuccess(t('auth.forgotSuccess'))
+  await navigateTo(localePath(`/auth/reset-password?email=${encodeURIComponent(form.email)}`))
 }
 
 useHead({
@@ -30,10 +36,13 @@ useHead({
             {{ t('auth.email') }}
             <input v-model="form.email" type="email" />
           </label>
-          <button class="solid-button" type="submit">{{ t('auth.forgotAction') }}</button>
+          <button class="solid-button" type="submit" :disabled="isLoading">
+            {{ isLoading ? t('common.submitting') : t('auth.forgotAction') }}
+          </button>
         </form>
         <p class="form-note">{{ t('auth.mockCodeHint') }}</p>
-        <pre v-if="responseText" class="response-box">{{ responseText }}</pre>
+        <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
+        <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>
       </div>
     </section>
   </div>

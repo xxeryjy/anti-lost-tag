@@ -19,7 +19,10 @@
   "common": {
     "saveDraft": "Save draft",
     "none": "None",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "loading": "Loading...",
+    "loadFailed": "Load failed",
+    "submitting": "Submitting..."
   },
   "home": {
     "heroEyebrow": "LOST & FOUND, REWRITTEN",
@@ -129,21 +132,27 @@
     "loginEyebrow": "Owner Login",
     "loginTitle": "Email and password login",
     "loginAction": "Login",
+    "loginSuccess": "Login successful. Opening your tag dashboard.",
     "forgotPassword": "Forgot password",
     "mockAccountHint": "Built-in test account: owner[at]smarttag.local / Password123",
     "registerEyebrow": "Create Owner Account",
     "registerTitle": "Register account",
     "registerAction": "Submit registration",
+    "registeredAction": "Submitted, verify next",
+    "registerSuccess": "Registration succeeded. Use the fixed code to verify your email.",
     "verifyEyebrow": "Mock Verify",
     "verifyTitle": "Complete email verification",
     "verifyAction": "Verify email",
+    "verifySuccess": "Email verified. Please log in.",
     "mockCodeHint": "The local mock verification code is always 123456",
     "forgotEyebrow": "Password Recovery",
     "forgotTitle": "Request password recovery",
     "forgotAction": "Send reset request",
+    "forgotSuccess": "Recovery request confirmed. Opening the reset page.",
     "resetEyebrow": "Reset Password",
     "resetTitle": "Reset password",
-    "resetAction": "Confirm reset"
+    "resetAction": "Confirm reset",
+    "resetSuccess": "Password reset. Please log in with the new password."
   },
   "finder": {
     "pageTitle": "Finder Page",
@@ -173,21 +182,34 @@
     "activateTitle": "Activate and bind a tag",
     "activationCode": "Activation code",
     "activateAction": "Activate now",
+    "activateSuccess": "Activation succeeded. Opening profile edit.",
     "activateHint": "Sample inactive UID: mt-003, sample activation code: AC-003-777",
     "editEyebrow": "Edit Public Profile",
     "editTitle": "Edit public profile",
     "category": "Profile type",
+    "petKind": "Pet type",
     "displayName": "Display name",
     "customLabel": "Custom item name",
     "breed": "Breed / model note",
+    "sex": "Sex",
+    "isNeutered": "Neutered",
+    "hasMicrochip": "Has microchip",
+    "microchipCode": "Microchip code",
     "ownerPhone": "Owner phone",
+    "backupPhone": "Backup phone",
     "notificationEmail": "Notification email",
+    "homeAddress": "Home address",
+    "showHomeAddress": "Show home address",
     "medicalNote": "Important note",
-    "privacyMode": "Privacy mode"
+    "privacyMode": "Privacy mode",
+    "profileSaveSuccess": "Profile saved.",
+    "saveAndBack": "Save and return"
   },
   "dashboard": {
     "tagsEyebrow": "Owner Dashboard",
     "tagsTitle": "My tags",
+    "allTags": "All",
+    "emptyTags": "No tags match the current filter.",
     "noReward": "No reward note",
     "detailEyebrow": "Tag Detail",
     "detailTitle": "Tag detail",
@@ -195,6 +217,11 @@
     "updatedAt": "Updated at",
     "editProfile": "Edit profile",
     "previewFinder": "Preview Finder page",
-    "scansTitle": "Recent scans"
+    "enableLost": "Enable lost mode",
+    "disableLost": "Disable lost mode",
+    "lostEnabled": "Lost mode enabled.",
+    "lostDisabled": "Lost mode disabled.",
+    "scansTitle": "Recent scans",
+    "emptyScans": "No scan records yet."
   }
 }

@@ -19,7 +19,10 @@
   "common": {
     "saveDraft": "下書きを保存",
     "none": "なし",
-    "unknown": "不明"
+    "unknown": "不明",
+    "loading": "読み込み中...",
+    "loadFailed": "読み込みに失敗しました",
+    "submitting": "送信中..."
   },
   "home": {
     "heroEyebrow": "LOST & FOUND, REWRITTEN",
@@ -129,21 +132,27 @@
     "loginEyebrow": "Owner Login",
     "loginTitle": "メールアドレスでログイン",
     "loginAction": "ログイン",
+    "loginSuccess": "ログインしました。タグ管理ページを開きます。",
     "forgotPassword": "パスワードを忘れた",
     "mockAccountHint": "テスト用アカウント: owner[at]smarttag.local / Password123",
     "registerEyebrow": "Create Owner Account",
     "registerTitle": "アカウント登録",
     "registerAction": "登録する",
+    "registeredAction": "送信済み、認証待ち",
+    "registerSuccess": "登録しました。固定コードでメール認証を完了してください。",
     "verifyEyebrow": "Mock Verify",
     "verifyTitle": "メール認証を完了する",
     "verifyAction": "メールを認証する",
+    "verifySuccess": "メール認証が完了しました。ログインしてください。",
     "mockCodeHint": "ローカル認証コードは常に 123456 です",
     "forgotEyebrow": "Password Recovery",
     "forgotTitle": "パスワード再設定を依頼",
     "forgotAction": "再設定を依頼する",
+    "forgotSuccess": "再設定リクエストを確認しました。再設定ページへ進みます。",
     "resetEyebrow": "Reset Password",
     "resetTitle": "パスワード再設定",
-    "resetAction": "再設定する"
+    "resetAction": "再設定する",
+    "resetSuccess": "パスワードを再設定しました。新しいパスワードでログインしてください。"
   },
   "finder": {
     "pageTitle": "Finder ページ",
@@ -173,21 +182,34 @@
     "activateTitle": "タグを有効化して紐付ける",
     "activationCode": "アクティベーションコード",
     "activateAction": "有効化する",
+    "activateSuccess": "有効化しました。プロフィール編集へ進みます。",
     "activateHint": "未紐付け UID: mt-003、サンプルコード: AC-003-777",
     "editEyebrow": "Edit Public Profile",
     "editTitle": "公開プロフィールを編集",
     "category": "プロフィール種別",
+    "petKind": "ペット種別",
     "displayName": "表示名",
     "customLabel": "持ち物名",
     "breed": "品種 / 補足",
+    "sex": "性別",
+    "isNeutered": "避妊・去勢済み",
+    "hasMicrochip": "マイクロチップあり",
+    "microchipCode": "マイクロチップ番号",
     "ownerPhone": "所有者電話",
+    "backupPhone": "予備電話",
     "notificationEmail": "通知メール",
+    "homeAddress": "住所",
+    "showHomeAddress": "住所を公開する",
     "medicalNote": "注意事項",
-    "privacyMode": "プライバシーモード"
+    "privacyMode": "プライバシーモード",
+    "profileSaveSuccess": "プロフィールを保存しました。",
+    "saveAndBack": "保存して詳細へ戻る"
   },
   "dashboard": {
     "tagsEyebrow": "Owner Dashboard",
     "tagsTitle": "マイタグ",
+    "allTags": "すべて",
+    "emptyTags": "条件に一致するタグはありません。",
     "noReward": "謝礼メモなし",
     "detailEyebrow": "Tag Detail",
     "detailTitle": "タグ詳細",
@@ -195,6 +217,11 @@
     "updatedAt": "更新日時",
     "editProfile": "プロフィール編集",
     "previewFinder": "Finder ページ確認",
-    "scansTitle": "最近のスキャン"
+    "enableLost": "LOST モードを有効化",
+    "disableLost": "LOST モードを解除",
+    "lostEnabled": "LOST モードを有効にしました。",
+    "lostDisabled": "LOST モードを解除しました。",
+    "scansTitle": "最近のスキャン",
+    "emptyScans": "まだスキャン記録はありません。"
   }
 }

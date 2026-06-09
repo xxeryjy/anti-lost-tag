@@ -2,6 +2,9 @@
 import heroImage from '~/assets/images/Dog_running@2x.png'
 import logoImage from '~/assets/images/logo.png'
 import logoNavImage from '~/assets/images/logo_nav.png'
+import valueImageOne from '~/assets/images/Mask_group1.png'
+import valueImageTwo from '~/assets/images/Mask_group2.png'
+import valueImageThree from '~/assets/images/Mask_group3.png'
 
 definePageMeta({
   layout: false
@@ -32,15 +35,18 @@ const navLinks = computed(() => [
 const valueItems = computed(() => [
   {
     title: t('home.valueOneTitle'),
-    copy: t('home.valueOneCopy')
+    copy: t('home.valueOneCopy'),
+    image: valueImageOne
   },
   {
     title: t('home.valueTwoTitle'),
-    copy: t('home.valueTwoCopy')
+    copy: t('home.valueTwoCopy'),
+    image: valueImageTwo
   },
   {
     title: t('home.valueThreeTitle'),
-    copy: t('home.valueThreeCopy')
+    copy: t('home.valueThreeCopy'),
+    image: valueImageThree
   }
 ])
 
@@ -263,24 +269,31 @@ useHead(() => ({
               :key="item.title"
               class="home-value-item"
             >
-              <span class="home-value-index" aria-hidden="true">{{ String(index + 1).padStart(2, '0') }}</span>
-              <h3 class="home-value-title">{{ item.title }}</h3>
-              <p class="section-copy">{{ item.copy }}</p>
+              <figure class="home-value-media">
+                <img :src="item.image" :alt="item.title" class="home-value-image">
+                <span class="home-value-index" aria-hidden="true">{{ String(index + 1).padStart(2, '0') }}</span>
+              </figure>
+              <div class="home-value-content">
+                <h3 class="home-value-title">{{ item.title }}</h3>
+                <p class="section-copy">{{ item.copy }}</p>
+              </div>
             </article>
           </div>
         </div>
       </section>
 
       <section class="home-section home-our-story">
-        <div class="home-section-intro home-reveal home-reveal-delay-1">
-          <span class="eyebrow">{{ t('home.storyEyebrow') }}</span>
-          <h2 class="section-display-title">{{ t('home.storyTitle') }}</h2>
-        </div>
+        <div class="home-story-card home-reveal home-reveal-delay-1">
+          <div class="home-story-heading">
+            <span class="home-section-tag">{{ t('home.storyEyebrow') }}</span>
+            <h2 class="section-display-title">{{ t('home.storyTitle') }}</h2>
+          </div>
 
-        <div class="home-story-body home-reveal home-reveal-delay-2">
-          <p class="section-copy home-copy-lg">{{ t('home.storyBodyOne') }}</p>
-          <p class="section-copy">{{ t('home.storyBodyTwo') }}</p>
-          <p class="home-story-closing">{{ t('home.storyBodyThree') }}</p>
+          <div class="home-story-body">
+            <p class="section-copy home-copy-lg">{{ t('home.storyBodyOne') }}</p>
+            <p class="section-copy">{{ t('home.storyBodyTwo') }}</p>
+            <p class="home-story-closing">{{ t('home.storyBodyThree') }}</p>
+          </div>
         </div>
       </section>
     </main>

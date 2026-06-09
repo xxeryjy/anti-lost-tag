@@ -1,19 +1,26 @@
 <script setup lang="ts">
 const { t } = useI18n()
+const route = useRoute()
+const localePath = useLocalePath()
 const form = reactive({
-  email: 'owner@smarttag.local',
+  email: typeof route.query.email === 'string' ? route.query.email : 'owner@smarttag.local',
   code: '123456',
   newPassword: 'Password456'
 })
-const responseText = ref('')
+const { isLoading, errorMessage, successMessage, run, setSuccess } = useApiRequest()
 
 async function submitResetPassword() {
-  const response = await $fetch('/api/auth/reset-password', {
+  const data = await run<{ message: string }>(() => $fetch('/api/auth/reset-password', {
     method: 'POST',
     body: form
-  }).catch((error) => error.data || error)
+  }))
 
-  responseText.value = JSON.stringify(response, null, 2)
+  if (!data) {
+    return
+  }
+
+  setSuccess(t('auth.resetSuccess'))
+  await navigateTo(localePath('/auth/login'))
 }
 
 useHead({
@@ -40,9 +47,12 @@ useHead({
             {{ t('auth.newPassword') }}
             <input v-model="form.newPassword" type="password" />
           </label>
-          <button class="solid-button" type="submit">{{ t('auth.resetAction') }}</button>
+          <button class="solid-button" type="submit" :disabled="isLoading">
+            {{ isLoading ? t('common.submitting') : t('auth.resetAction') }}
+          </button>
         </form>
-        <pre v-if="responseText" class="response-box">{{ responseText }}</pre>
+        <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
+        <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>
       </div>
     </section>
   </div>

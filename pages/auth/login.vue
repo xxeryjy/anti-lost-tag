@@ -1,19 +1,26 @@
 <script setup lang="ts">
 const { t } = useI18n()
 const localePath = useLocalePath()
+const route = useRoute()
 const form = reactive({
   email: 'owner@smarttag.local',
   password: 'Password123'
 })
-const responseText = ref('')
+const { isLoading, errorMessage, successMessage, run, setSuccess } = useApiRequest()
 
 async function submitLogin() {
-  const response = await $fetch('/api/auth/login', {
+  const data = await run<{ user: { email: string } }>(() => $fetch('/api/auth/login', {
     method: 'POST',
     body: form
-  }).catch((error) => error.data || error)
+  }))
 
-  responseText.value = JSON.stringify(response, null, 2)
+  if (!data) {
+    return
+  }
+
+  setSuccess(t('auth.loginSuccess'))
+  const redirectTo = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard/tags'
+  await navigateTo(localePath(redirectTo))
 }
 
 useHead({
@@ -37,12 +44,15 @@ useHead({
             <input v-model="form.password" type="password" />
           </label>
           <div class="stack-actions">
-            <button class="solid-button" type="submit">{{ t('auth.loginAction') }}</button>
+            <button class="solid-button" type="submit" :disabled="isLoading">
+              {{ isLoading ? t('common.submitting') : t('auth.loginAction') }}
+            </button>
             <NuxtLink class="ghost-button" :to="localePath('/auth/forgot-password')">{{ t('auth.forgotPassword') }}</NuxtLink>
           </div>
         </form>
         <p class="form-note">{{ t('auth.mockAccountHint') }}</p>
-        <pre v-if="responseText" class="response-box">{{ responseText }}</pre>
+        <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
+        <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>
       </div>
     </section>
   </div>

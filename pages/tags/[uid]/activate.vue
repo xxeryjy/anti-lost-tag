@@ -1,19 +1,25 @@
 <script setup lang="ts">
 const route = useRoute()
 const { t } = useI18n()
+const localePath = useLocalePath()
 const form = reactive({
   uid: String(route.params.uid),
   activationCode: 'AC-003-777'
 })
-const responseText = ref('')
+const { isLoading, errorMessage, successMessage, run, setSuccess } = useApiRequest()
 
 async function submitActivation() {
-  const response = await $fetch('/api/tags/activate', {
+  const data = await run<{ tag: { uid: string } }>(() => $fetch('/api/tags/activate', {
     method: 'POST',
     body: form
-  }).catch((error) => error.data || error)
+  }))
 
-  responseText.value = JSON.stringify(response, null, 2)
+  if (!data) {
+    return
+  }
+
+  setSuccess(t('tag.activateSuccess'))
+  await navigateTo(localePath(`/tags/${data.tag.uid}/edit`))
 }
 
 useHead({
@@ -30,16 +36,19 @@ useHead({
         <form @submit.prevent="submitActivation">
           <label class="field-label">
             UID
-            <input v-model="form.uid" type="text" />
+            <input v-model="form.uid" type="text" readonly />
           </label>
           <label class="field-label">
             {{ t('tag.activationCode') }}
             <input v-model="form.activationCode" type="text" />
           </label>
-          <button class="solid-button" type="submit">{{ t('tag.activateAction') }}</button>
+          <button class="solid-button" type="submit" :disabled="isLoading">
+            {{ isLoading ? t('common.submitting') : t('tag.activateAction') }}
+          </button>
         </form>
         <p class="form-note">{{ t('tag.activateHint') }}</p>
-        <pre v-if="responseText" class="response-box">{{ responseText }}</pre>
+        <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
+        <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>
       </div>
     </section>
   </div>
