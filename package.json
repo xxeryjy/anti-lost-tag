@@ -8,7 +8,12 @@
     "build": "node ./node_modules/nuxt/bin/nuxt.mjs build",
     "preview": "node ./node_modules/nuxt/bin/nuxt.mjs preview",
     "postinstall": "node ./node_modules/nuxt/bin/nuxt.mjs prepare",
-    "prisma:generate": "prisma generate"
+    "prisma:generate": "node ./node_modules/prisma/build/index.js generate",
+    "db:push": "node ./node_modules/prisma/build/index.js db push",
+    "db:seed": "node prisma/seed.mjs"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.mjs"
   },
   "dependencies": {
     "@nuxtjs/i18n": "^9.1.5",

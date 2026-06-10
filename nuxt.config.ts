@@ -6,6 +6,7 @@ export default defineNuxtConfig({
   css: ['~/assets/styles/main.scss'],
   modules: ['@pinia/nuxt', '@nuxtjs/i18n'],
   runtimeConfig: {
+    apiDataSource: process.env.API_DATA_SOURCE || 'mock',
     sessionSecret: process.env.SESSION_SECRET || 'dev-session-secret',
     authMockCode: process.env.AUTH_MOCK_CODE || '123456',
     authEnableEmailVendor: process.env.AUTH_ENABLE_EMAIL_VENDOR || 'false',

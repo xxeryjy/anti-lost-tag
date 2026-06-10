@@ -4,6 +4,8 @@ info:
   version: 0.1.0
   description: |
     SmartTag 首版接口规范。
+    真实接口开发前的冻结口径见：
+    - 20260610_1127_设计_SmartTag真实接口契约冻结.md
 
     本规范基于以下设计文档整理：
     - SmartTag 核心流程与隐私策略
@@ -334,6 +336,31 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalError'
+  /tags/{id}:
+    delete:
+      tags:
+        - Tags
+      summary: 删除主人名下标签
+      operationId: deleteTag
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TagId'
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteTagResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/TagNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /tags/{id}/status:
     patch:
       tags:
@@ -416,6 +443,18 @@ paths:
         - $ref: '#/components/parameters/TagId'
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
+        - name: locationSource
+          in: query
+          required: false
+          description: 按定位来源筛选
+          schema:
+            $ref: '#/components/schemas/LocationSource'
+        - name: notificationStatus
+          in: query
+          required: false
+          description: 按扫描提醒状态筛选
+          schema:
+            $ref: '#/components/schemas/NotificationStatus'
       responses:
         '200':
           description: 获取成功
@@ -423,6 +462,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TagScansResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/TagNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /tags/{id}/messages:
+    get:
+      tags:
+        - Tags
+      summary: 获取主人侧匿名留言
+      operationId: listTagMessages
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TagId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: deliveryStatus
+          in: query
+          required: false
+          description: 按留言转发状态筛选
+          schema:
+            $ref: '#/components/schemas/DeliveryStatus'
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagMessagesResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -542,9 +614,9 @@ paths:
             schema:
               type: object
               required:
-                - file
+                - image
               properties:
-                file:
+                image:
                   type: string
                   format: binary
       responses:
@@ -621,7 +693,7 @@ components:
               value:
                 success: false
                 error:
-                  code: INVALID_PARAMS
+                  code: BAD_REQUEST
                   message: 参数错误
                 meta:
                   requestId: req_01JX1234567890
@@ -707,7 +779,7 @@ components:
               value:
                 success: false
                 error:
-                  code: UPLOAD_NOT_ALLOWED
+                  code: UNSUPPORTED_IMAGE_TYPE
                   message: 上传文件不符合要求
                 meta:
                   requestId: req_01JX1234567890
@@ -732,9 +804,9 @@ components:
     PreferredLocale:
       type: string
       enum:
-        - ZH_CN
-        - EN
-        - JA
+        - zh-CN
+        - en
+        - ja
     TagStatus:
       type: string
       enum:
@@ -838,16 +910,17 @@ components:
       required:
         - id
         - email
-        - emailVerified
-        - preferredLocale
+        - emailVerifiedAt
       properties:
         id:
           type: integer
         email:
           type: string
           format: email
-        emailVerified:
-          type: boolean
+        emailVerifiedAt:
+          type: string
+          format: date-time
+          nullable: true
         preferredLocale:
           $ref: '#/components/schemas/PreferredLocale'
         timezone:
@@ -857,8 +930,6 @@ components:
       required:
         - email
         - password
-        - preferredLocale
-        - timezone
       properties:
         email:
           type: string
@@ -887,17 +958,14 @@ components:
           type: object
           required:
             - user
-            - requiresEmailVerification
-            - verificationMethod
+            - nextStep
           properties:
             user:
               $ref: '#/components/schemas/UserSummary'
-            requiresEmailVerification:
-              type: boolean
-            verificationMethod:
+            nextStep:
               type: string
               enum:
-                - MOCK_CODE
+                - VERIFY_EMAIL
         meta:
           $ref: '#/components/schemas/Meta'
     EmailRequest:
@@ -989,13 +1057,12 @@ components:
           type: object
           required:
             - accepted
-            - mockCode
+            - mockMode
           properties:
             accepted:
               type: boolean
-            mockCode:
-              type: string
-              example: '123456'
+            mockMode:
+              type: boolean
         meta:
           $ref: '#/components/schemas/Meta'
     VerifyEmailConfirmResponse:
@@ -1012,10 +1079,10 @@ components:
         data:
           type: object
           required:
-            - verified
+            - user
           properties:
-            verified:
-              type: boolean
+            user:
+              $ref: '#/components/schemas/UserSummary'
         meta:
           $ref: '#/components/schemas/Meta'
     ForgotPasswordResponse:
@@ -1033,13 +1100,12 @@ components:
           type: object
           required:
             - accepted
-            - mockCode
+            - mockMode
           properties:
             accepted:
               type: boolean
-            mockCode:
-              type: string
-              example: '123456'
+            mockMode:
+              type: boolean
         meta:
           $ref: '#/components/schemas/Meta'
     ResetPasswordRequest:
@@ -1074,10 +1140,10 @@ components:
         data:
           type: object
           required:
-            - reset
+            - message
           properties:
-            reset:
-              type: boolean
+            message:
+              type: string
         meta:
           $ref: '#/components/schemas/Meta'
     TagSummary:
@@ -1185,10 +1251,9 @@ components:
         data:
           type: object
           required:
-            - list
-            - pagination
+            - items
           properties:
-            list:
+            items:
               type: array
               items:
                 $ref: '#/components/schemas/MyTagItem'
@@ -1246,6 +1311,26 @@ components:
                 updatedAt:
                   type: string
                   format: date-time
+        meta:
+          $ref: '#/components/schemas/Meta'
+    DeleteTagResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - tag
+          properties:
+            tag:
+              $ref: '#/components/schemas/TagSummary'
         meta:
           $ref: '#/components/schemas/Meta'
     UpdateTagProfileRequest:
@@ -1470,13 +1555,77 @@ components:
         data:
           type: object
           required:
-            - list
+            - items
             - pagination
           properties:
-            list:
+            items:
               type: array
               items:
                 $ref: '#/components/schemas/ScanLogItem'
+            list:
+              type: array
+              description: 过渡兼容字段，新代码应使用 items。
+              items:
+                $ref: '#/components/schemas/ScanLogItem'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    PrivacyMessageItem:
+      type: object
+      required:
+        - id
+        - tagId
+        - message
+        - deliveryStatus
+        - createdAt
+      properties:
+        id:
+          type: integer
+        tagId:
+          type: integer
+        scanLogId:
+          type: integer
+          nullable: true
+        finderName:
+          type: string
+          nullable: true
+        finderContact:
+          type: string
+          nullable: true
+        message:
+          type: string
+        deliveryStatus:
+          $ref: '#/components/schemas/DeliveryStatus'
+        createdAt:
+          type: string
+          format: date-time
+    TagMessagesResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        data:
+          type: object
+          required:
+            - items
+            - pagination
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/PrivacyMessageItem'
+            list:
+              type: array
+              description: 过渡兼容字段，新代码应使用 items。
+              items:
+                $ref: '#/components/schemas/PrivacyMessageItem'
             pagination:
               $ref: '#/components/schemas/Pagination'
         meta:
@@ -1641,7 +1790,7 @@ components:
         message:
           type: string
           minLength: 1
-          maxLength: 1000
+          maxLength: 800
     CreatePrivacyMessageResponse:
       type: object
       required:

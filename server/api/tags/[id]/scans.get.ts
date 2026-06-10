@@ -1,6 +1,11 @@
 import { findTagById, getScansByTagId } from '~/server/services/mock-data'
 import { fail, ok } from '~/server/utils/api-response'
+import { paginateItems, parsePaginationQuery } from '~/server/utils/pagination'
 import { getMockSessionUserId } from '~/server/utils/session'
+import type { LocationSource, NotificationStatus } from '~/types/smarttag'
+
+const locationSources: LocationSource[] = ['GPS', 'IP']
+const notificationStatuses: NotificationStatus[] = ['PENDING', 'SENT', 'FAILED', 'SKIPPED']
 
 export default defineEventHandler((event) => {
   const userId = getMockSessionUserId(event)
@@ -17,7 +22,16 @@ export default defineEventHandler((event) => {
     fail(403, 'FORBIDDEN', '无权查看该标签扫描记录')
   }
 
+  const query = getQuery(event)
+  const locationSource = typeof query.locationSource === 'string' && locationSources.includes(query.locationSource as LocationSource)
+    ? query.locationSource as LocationSource
+    : undefined
+  const notificationStatus = typeof query.notificationStatus === 'string' && notificationStatuses.includes(query.notificationStatus as NotificationStatus)
+    ? query.notificationStatus as NotificationStatus
+    : undefined
+  const { page, pageSize } = parsePaginationQuery(query, 5)
+
   return ok({
-    items: getScansByTagId(id)
+    ...paginateItems(getScansByTagId(id, { locationSource, notificationStatus }), page, pageSize)
   })
 })

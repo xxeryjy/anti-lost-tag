@@ -1,4 +1,4 @@
-import type { PrivacyMessageRecord, ScanLogItem, TagProfile, TagRecord } from '~/types/smarttag'
+import type { DeliveryStatus, LocationSource, NotificationStatus, PrivacyMessageRecord, ScanLogItem, TagProfile, TagRecord } from '~/types/smarttag'
 
 interface MockUser {
   id: number
@@ -138,6 +138,14 @@ const tagScans: Record<number, number[]> = {
 }
 
 const messages: PrivacyMessageRecord[] = []
+const messageSubmitRecords: Array<{
+  tagId: number
+  ipAddress: string
+  createdAt: string
+}> = []
+
+const scanNotificationWindow = 60 * 1000
+const privacyMessageWindow = 5 * 60 * 1000
 
 export function listMyTags(userId: number) {
   return tags.filter((tag) => tag.userId === userId)
@@ -195,6 +203,9 @@ export function activateTag(uid: string, activationCode: string, userId: number)
     return { kind: 'NOT_FOUND' as const }
   }
   if (tag.userId) {
+    if (tag.userId === userId) {
+      return { kind: 'ALREADY_OWNED' as const, tag }
+    }
     return { kind: 'ALREADY_BOUND' as const }
   }
   if (tag.activationCode !== activationCode) {
@@ -255,17 +266,73 @@ export function updateTagProfile(id: number, payload: Partial<TagProfile>) {
   return tag.profile
 }
 
+export function deleteTag(id: number) {
+  const tagIndex = tags.findIndex((tag) => tag.id === id)
+  if (tagIndex < 0) {
+    return null
+  }
+
+  const [deletedTag] = tags.splice(tagIndex, 1)
+  const scanIds = new Set(tagScans[id] || [])
+  delete tagScans[id]
+
+  for (let index = scans.length - 1; index >= 0; index -= 1) {
+    if (scanIds.has(scans[index].id)) {
+      scans.splice(index, 1)
+    }
+  }
+
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    if (messages[index].tagId === id) {
+      messages.splice(index, 1)
+    }
+  }
+
+  for (let index = messageSubmitRecords.length - 1; index >= 0; index -= 1) {
+    if (messageSubmitRecords[index].tagId === id) {
+      messageSubmitRecords.splice(index, 1)
+    }
+  }
+
+  return deletedTag
+}
+
 export function getProfileByTagId(id: number) {
   return findTagById(id)?.profile || null
 }
 
-export function getScansByTagId(id: number) {
+export function getScansByTagId(
+  id: number,
+  filters: {
+    locationSource?: LocationSource
+    notificationStatus?: NotificationStatus
+  } = {}
+) {
   const ids = tagScans[id] || []
-  return scans.filter((scan) => ids.includes(scan.id))
+  return scans.filter((scan) => {
+    if (!ids.includes(scan.id)) {
+      return false
+    }
+    if (filters.locationSource && scan.locationSource !== filters.locationSource) {
+      return false
+    }
+    if (filters.notificationStatus && scan.notificationStatus !== filters.notificationStatus) {
+      return false
+    }
+    return true
+  })
 }
 
-export function getPrivacyMessagesByTagId(id: number) {
-  return messages.filter((message) => message.tagId === id)
+export function getPrivacyMessagesByTagId(id: number, filters: { deliveryStatus?: DeliveryStatus } = {}) {
+  return messages.filter((message) => {
+    if (message.tagId !== id) {
+      return false
+    }
+    if (filters.deliveryStatus && message.deliveryStatus !== filters.deliveryStatus) {
+      return false
+    }
+    return true
+  })
 }
 
 export function appendScan(uid: string, payload: Partial<ScanLogItem>) {
@@ -275,30 +342,64 @@ export function appendScan(uid: string, payload: Partial<ScanLogItem>) {
   }
 
   const tagId = tag.id
+  const ipAddress = payload.ipAddress ?? '127.0.0.1'
+  const now = new Date()
+  const recentDuplicateScan = scans.find((scan) => {
+    if (scan.ipAddress !== ipAddress) {
+      return false
+    }
+    if (!(tagScans[tagId] || []).includes(scan.id)) {
+      return false
+    }
+
+    return now.getTime() - new Date(scan.scannedAt).getTime() < scanNotificationWindow
+  })
+  const notificationSuppressed = Boolean(recentDuplicateScan)
   const scan: ScanLogItem = {
     id: scans.length + 1000,
-    scannedAt: new Date().toISOString(),
+    scannedAt: now.toISOString(),
     locationSource: payload.locationSource || 'IP',
     latitude: payload.latitude ?? null,
     longitude: payload.longitude ?? null,
     city: payload.city ?? null,
     region: payload.region ?? null,
     country: payload.country ?? null,
-    ipAddress: payload.ipAddress ?? '127.0.0.1',
+    ipAddress,
     userAgent: payload.userAgent ?? 'Mock Browser',
     mapUrl: payload.mapUrl ?? null,
     tagStatusAtScan: tag.status,
-    notificationSuppressed: false,
-    notificationStatus: 'SENT'
+    notificationSuppressed,
+    notificationStatus: notificationSuppressed ? 'SKIPPED' : 'SENT'
   }
   scans.unshift(scan)
   tagScans[tagId] = [scan.id, ...(tagScans[tagId] || [])]
   return scan
 }
 
+export function canCreatePrivacyMessage(uid: string, ipAddress: string) {
+  const tag = findTagByUid(uid)
+  if (!tag) {
+    return { kind: 'NOT_FOUND' as const }
+  }
+
+  const now = Date.now()
+  const recentRecord = messageSubmitRecords.find((record) => {
+    return record.tagId === tag.id
+      && record.ipAddress === ipAddress
+      && now - new Date(record.createdAt).getTime() < privacyMessageWindow
+  })
+
+  if (recentRecord) {
+    return { kind: 'RATE_LIMITED' as const }
+  }
+
+  return { kind: 'ALLOWED' as const, tag }
+}
+
 export function createPrivacyMessage(
   uid: string,
-  payload: Pick<PrivacyMessageRecord, 'finderName' | 'finderContact' | 'message'>
+  payload: Pick<PrivacyMessageRecord, 'finderName' | 'finderContact' | 'message'>,
+  options: { ipAddress?: string } = {}
 ) {
   const tag = findTagByUid(uid)
   if (!tag || !tag.profile) {
@@ -315,5 +416,10 @@ export function createPrivacyMessage(
     createdAt: new Date().toISOString()
   }
   messages.unshift(record)
+  messageSubmitRecords.unshift({
+    tagId: tag.id,
+    ipAddress: options.ipAddress || '127.0.0.1',
+    createdAt: record.createdAt
+  })
   return record
 }

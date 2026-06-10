@@ -61,6 +61,9 @@ useHead({
             class="state-card"
             :to="localePath(`/dashboard/tags/${tag.uid}`)"
           >
+            <div v-if="tag.profile?.photoUrl" class="tag-card-photo">
+              <img :src="tag.profile.photoUrl" :alt="tag.profile.displayName || tag.uid" />
+            </div>
             <div class="inline-actions" style="justify-content: space-between;">
               <strong>{{ tag.profile?.displayName || tag.uid }}</strong>
               <span class="status-chip" :class="`status-${tag.status.toLowerCase()}`">{{ tag.status }}</span>

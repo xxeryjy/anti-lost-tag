@@ -1,6 +1,8 @@
 <script setup lang="ts">
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
+const route = useRoute()
+const { getAuthErrorMessage } = useAuthErrorMessage()
 const form = reactive({
   email: 'new-owner@smarttag.local',
   password: 'Password123',
@@ -11,15 +13,28 @@ const verifyForm = reactive({
   code: '123456'
 })
 const step = ref<'REGISTER' | 'VERIFY'>('REGISTER')
-const { isLoading, errorMessage, successMessage, run, setSuccess } = useApiRequest()
+const { isLoading, errorMessage, errorCode, successMessage, run, setSuccess, setError } = useApiRequest()
+
+function getRedirectPath() {
+  const redirect = route.query.redirect
+  return typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')
+    ? redirect
+    : '/dashboard/tags'
+}
 
 async function submitRegister() {
+  if (!form.email || !form.password) {
+    setError(t('auth.errorRequired'), 'BAD_REQUEST')
+    return
+  }
+
   const data = await run<{ nextStep: string }>(() => $fetch('/api/auth/register', {
     method: 'POST',
     body: form
   }))
 
   if (!data) {
+    setError(getAuthErrorMessage(errorCode.value), errorCode.value)
     return
   }
 
@@ -29,17 +44,23 @@ async function submitRegister() {
 }
 
 async function confirmEmail() {
+  if (!verifyForm.email || !verifyForm.code) {
+    setError(t('auth.errorVerifyRequired'), 'BAD_REQUEST')
+    return
+  }
+
   const data = await run<{ user: { email: string } }>(() => $fetch('/api/auth/verify-email/confirm', {
     method: 'POST',
     body: verifyForm
   }))
 
   if (!data) {
+    setError(getAuthErrorMessage(errorCode.value), errorCode.value)
     return
   }
 
   setSuccess(t('auth.verifySuccess'))
-  await navigateTo(localePath(`/auth/login?redirect=${encodeURIComponent('/dashboard/tags')}`))
+  await navigateTo(localePath(`/auth/login?redirect=${encodeURIComponent(getRedirectPath())}`))
 }
 
 useHead({

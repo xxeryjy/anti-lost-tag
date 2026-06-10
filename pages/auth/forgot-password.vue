@@ -1,18 +1,25 @@
 <script setup lang="ts">
 const { t } = useI18n()
 const localePath = useLocalePath()
+const { getAuthErrorMessage } = useAuthErrorMessage()
 const form = reactive({
   email: 'owner@smarttag.local'
 })
-const { isLoading, errorMessage, successMessage, run, setSuccess } = useApiRequest()
+const { isLoading, errorMessage, errorCode, successMessage, run, setSuccess, setError } = useApiRequest()
 
 async function submitForgotPassword() {
+  if (!form.email) {
+    setError(t('auth.errorEmailRequired'), 'BAD_REQUEST')
+    return
+  }
+
   const data = await run<{ accepted: boolean; mockMode: boolean }>(() => $fetch('/api/auth/forgot-password', {
     method: 'POST',
     body: form
   }))
 
   if (!data) {
+    setError(getAuthErrorMessage(errorCode.value), errorCode.value)
     return
   }
 

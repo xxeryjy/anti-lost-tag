@@ -7,6 +7,19 @@ export type LocationSource = 'GPS' | 'IP'
 export type NotificationStatus = 'PENDING' | 'SENT' | 'FAILED' | 'SKIPPED'
 export type DeliveryStatus = 'PENDING' | 'SENT' | 'FAILED'
 
+export interface PaginationMeta {
+  page: number
+  pageSize: number
+  total: number
+  totalPages: number
+}
+
+export interface PaginatedList<T> {
+  items: T[]
+  list: T[]
+  pagination: PaginationMeta
+}
+
 export interface TagProfile {
   tagId: number
   category: ProfileCategory

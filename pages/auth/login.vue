@@ -3,26 +3,39 @@ const { t } = useI18n()
 const localePath = useLocalePath()
 const route = useRoute()
 const authStore = useAuthStore()
+const { getAuthErrorMessage } = useAuthErrorMessage()
 const form = reactive({
   email: 'owner@smarttag.local',
   password: 'Password123'
 })
-const { isLoading, errorMessage, successMessage, run, setSuccess } = useApiRequest()
+const { isLoading, errorMessage, errorCode, successMessage, run, setSuccess, setError } = useApiRequest()
+
+function getRedirectPath() {
+  const redirect = route.query.redirect
+  return typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')
+    ? redirect
+    : '/dashboard/tags'
+}
 
 async function submitLogin() {
+  if (!form.email || !form.password) {
+    setError(t('auth.errorRequired'), 'BAD_REQUEST')
+    return
+  }
+
   const data = await run<{ user: { email: string; emailVerifiedAt: string | null } }>(() => $fetch('/api/auth/login', {
     method: 'POST',
     body: form
   }))
 
   if (!data) {
+    setError(getAuthErrorMessage(errorCode.value), errorCode.value)
     return
   }
 
   setSuccess(t('auth.loginSuccess'))
   authStore.applyUser(data.user)
-  const redirectTo = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard/tags'
-  await navigateTo(localePath(redirectTo))
+  await navigateTo(localePath(getRedirectPath()))
 }
 
 useHead({

@@ -26,12 +26,13 @@ const loadError = ref('')
 const tag = ref<PublicFinderTag | null>(null)
 const scanLog = ref<ScanLogItem | null>(null)
 const scanSubmitted = ref(false)
+const isMessageModalOpen = ref(false)
 const messageForm = reactive({
   finderName: '',
   finderContact: '',
   message: ''
 })
-const { isLoading, errorMessage, successMessage, run, setSuccess } = useApiRequest()
+const { isLoading, errorMessage, successMessage, setSuccess } = useApiRequest()
 
 const isInactive = computed(() => tag.value?.status === 'INACTIVE')
 const isLost = computed(() => tag.value?.status === 'LOST')
@@ -118,22 +119,66 @@ function openFinderLocation() {
   )
 }
 
-async function submitPrivacyMessage() {
-  const data = await run<{
-    messageId: number
-    deliveryStatus: PrivacyMessageRecord['deliveryStatus']
-  }>(() => $fetch(`/api/tags/public/${uid.value}/message`, {
-    method: 'POST',
-    body: messageForm
-  }))
-
-  if (!data) {
-    return
-  }
-
+function resetMessageForm() {
   messageForm.finderName = ''
   messageForm.finderContact = ''
   messageForm.message = ''
+}
+
+function openMessageModal() {
+  errorMessage.value = ''
+  successMessage.value = ''
+  isMessageModalOpen.value = true
+}
+
+function closeMessageModal() {
+  if (isLoading.value) {
+    return
+  }
+
+  errorMessage.value = ''
+  isMessageModalOpen.value = false
+}
+
+async function submitPrivacyMessage() {
+  const message = messageForm.message.trim()
+  if (!message) {
+    errorMessage.value = t('finder.messageRequired')
+    successMessage.value = ''
+    return
+  }
+
+  isLoading.value = true
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  try {
+    await $fetch<{
+      success: true
+      data: {
+        messageId: number
+        deliveryStatus: PrivacyMessageRecord['deliveryStatus']
+      }
+    }>(`/api/tags/public/${uid.value}/message`, {
+      method: 'POST',
+      body: {
+        finderName: messageForm.finderName.trim(),
+        finderContact: messageForm.finderContact.trim(),
+        message
+      }
+    })
+  } catch (error: unknown) {
+    const apiError = error as { data?: { error?: { code?: string; message?: string } }; statusCode?: number; statusMessage?: string; message?: string }
+    errorMessage.value = apiError.data?.error?.code === 'RATE_LIMITED' || apiError.statusCode === 429
+      ? t('finder.messageRateLimited')
+      : apiError.data?.error?.message || apiError.statusMessage || apiError.message || t('finder.messageFailed')
+    return
+  } finally {
+    isLoading.value = false
+  }
+
+  resetMessageForm()
+  isMessageModalOpen.value = false
   setSuccess(t('finder.messageSuccess'))
 }
 
@@ -214,7 +259,7 @@ useHead({
           <NuxtLink
             v-if="!tag.viewer.isAuthenticated"
             class="outline-button"
-            :to="localePath('/auth/register')"
+            :to="localePath(`/auth/register?redirect=${encodeURIComponent(`/tags/${uid}/activate`)}`)"
           >
             {{ t('finder.registerToActivate') }}
           </NuxtLink>
@@ -224,6 +269,9 @@ useHead({
       <div v-else-if="tag" class="finder-card">
         <FinderBanner v-if="isLost" />
         <div class="finder-heading">
+          <div v-if="tag.profile?.photoUrl" class="finder-profile-photo">
+            <img :src="tag.profile.photoUrl" :alt="displayName" />
+          </div>
           <div>
             <span class="eyebrow">{{ isOwner && isPreview ? t('finder.ownerPreview') : t('finder.publicProfile') }}</span>
             <h1 class="section-title">{{ displayName }}</h1>
@@ -258,28 +306,16 @@ useHead({
           <p class="muted-text">{{ tag.profile.homeAddress }}</p>
         </div>
 
-        <form v-if="canSendMessage" class="finder-message-form" @submit.prevent="submitPrivacyMessage">
-          <h2 class="finder-form-title">{{ t('finder.messageTitle') }}</h2>
-          <div class="form-grid two-columns">
-            <label class="field-label">
-              {{ t('finder.finderName') }}
-              <input v-model="messageForm.finderName" type="text" maxlength="80" />
-            </label>
-            <label class="field-label">
-              {{ t('finder.finderContact') }}
-              <input v-model="messageForm.finderContact" type="text" maxlength="120" />
-            </label>
+        <div v-if="canSendMessage" class="finder-message-entry">
+          <div>
+            <strong>{{ t('finder.messageTitle') }}</strong>
+            <p class="muted-text">{{ t('finder.messageEntryCopy') }}</p>
           </div>
-          <label class="field-label">
-            {{ t('finder.message') }}
-            <textarea v-model="messageForm.message" maxlength="800" required />
-          </label>
-          <button class="solid-button" type="submit" :disabled="isLoading">
-            {{ isLoading ? t('common.submitting') : t('finder.sendMessage') }}
+          <button class="solid-button" type="button" @click="openMessageModal">
+            {{ t('finder.sendPrivacyMessage') }}
           </button>
-          <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
-          <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>
-        </form>
+        </div>
+        <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>
 
         <div class="inline-actions">
           <button class="solid-button" type="button" @click="openFinderLocation">
@@ -291,5 +327,45 @@ useHead({
         </div>
       </div>
     </section>
+
+    <div v-if="isMessageModalOpen" class="modal-backdrop" role="presentation" @click.self="closeMessageModal">
+      <section class="confirm-dialog finder-message-dialog" role="dialog" aria-modal="true" :aria-label="t('finder.messageTitle')">
+        <div class="modal-heading-row">
+          <div>
+            <span class="eyebrow">{{ t('finder.messageEyebrow') }}</span>
+            <h2 class="finder-form-title">{{ t('finder.messageTitle') }}</h2>
+          </div>
+          <button class="modal-close-button" type="button" :aria-label="t('common.cancel')" :disabled="isLoading" @click="closeMessageModal">
+            x
+          </button>
+        </div>
+        <form class="finder-message-form" @submit.prevent="submitPrivacyMessage">
+          <div class="form-grid two-columns">
+            <label class="field-label">
+              {{ t('finder.finderName') }}
+              <input v-model="messageForm.finderName" type="text" maxlength="80" autocomplete="name" />
+            </label>
+            <label class="field-label">
+              {{ t('finder.finderContact') }}
+              <input v-model="messageForm.finderContact" type="text" maxlength="120" autocomplete="email" />
+            </label>
+          </div>
+          <label class="field-label">
+            {{ t('finder.message') }}
+            <textarea v-model="messageForm.message" maxlength="800" required />
+          </label>
+          <p class="form-note">{{ t('finder.messagePrivacyNote') }}</p>
+          <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
+          <div class="inline-actions dialog-actions">
+            <button class="outline-button" type="button" :disabled="isLoading" @click="closeMessageModal">
+              {{ t('common.cancel') }}
+            </button>
+            <button class="solid-button" type="submit" :disabled="isLoading">
+              {{ isLoading ? t('common.submitting') : t('finder.sendMessage') }}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
   </div>
 </template>

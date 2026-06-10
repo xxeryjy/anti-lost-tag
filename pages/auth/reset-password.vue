@@ -2,20 +2,27 @@
 const { t } = useI18n()
 const route = useRoute()
 const localePath = useLocalePath()
+const { getAuthErrorMessage } = useAuthErrorMessage()
 const form = reactive({
   email: typeof route.query.email === 'string' ? route.query.email : 'owner@smarttag.local',
   code: '123456',
   newPassword: 'Password456'
 })
-const { isLoading, errorMessage, successMessage, run, setSuccess } = useApiRequest()
+const { isLoading, errorMessage, errorCode, successMessage, run, setSuccess, setError } = useApiRequest()
 
 async function submitResetPassword() {
+  if (!form.email || !form.code || !form.newPassword) {
+    setError(t('auth.errorResetRequired'), 'BAD_REQUEST')
+    return
+  }
+
   const data = await run<{ message: string }>(() => $fetch('/api/auth/reset-password', {
     method: 'POST',
     body: form
   }))
 
   if (!data) {
+    setError(getAuthErrorMessage(errorCode.value), errorCode.value)
     return
   }
 

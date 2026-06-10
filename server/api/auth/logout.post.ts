@@ -1,8 +1,8 @@
 import { ok } from '~/server/utils/api-response'
-import { clearMockSession } from '~/server/utils/session'
+import { clearAuthSession } from '~/server/utils/session'
 
 export default defineEventHandler((event) => {
-  clearMockSession(event)
+  clearAuthSession(event)
   return ok({
     message: '登出成功'
   })

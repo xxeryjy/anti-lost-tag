@@ -1,6 +1,10 @@
 import { findTagById, getPrivacyMessagesByTagId } from '~/server/services/mock-data'
 import { fail, ok } from '~/server/utils/api-response'
+import { paginateItems, parsePaginationQuery } from '~/server/utils/pagination'
 import { getMockSessionUserId } from '~/server/utils/session'
+import type { DeliveryStatus } from '~/types/smarttag'
+
+const deliveryStatuses: DeliveryStatus[] = ['PENDING', 'SENT', 'FAILED']
 
 export default defineEventHandler((event) => {
   const userId = getMockSessionUserId(event)
@@ -17,7 +21,13 @@ export default defineEventHandler((event) => {
     fail(403, 'FORBIDDEN', '无权查看该标签留言')
   }
 
+  const query = getQuery(event)
+  const deliveryStatus = typeof query.deliveryStatus === 'string' && deliveryStatuses.includes(query.deliveryStatus as DeliveryStatus)
+    ? query.deliveryStatus as DeliveryStatus
+    : undefined
+  const { page, pageSize } = parsePaginationQuery(query, 5)
+
   return ok({
-    items: getPrivacyMessagesByTagId(id)
+    ...paginateItems(getPrivacyMessagesByTagId(id, { deliveryStatus }), page, pageSize)
   })
 })

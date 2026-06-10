@@ -17,6 +17,12 @@ export default defineEventHandler(async (event) => {
   if (result.kind === 'NOT_FOUND') {
     fail(404, 'TAG_NOT_FOUND', '标签不存在')
   }
+  if (result.kind === 'ALREADY_OWNED') {
+    return ok({
+      tag: result.tag,
+      alreadyOwned: true
+    })
+  }
   if (result.kind === 'ALREADY_BOUND') {
     fail(409, 'TAG_ALREADY_BOUND', '标签已被绑定')
   }

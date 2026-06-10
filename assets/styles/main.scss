@@ -42,6 +42,13 @@ a {
   text-decoration: none;
 }
 
+.text-link {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 button,
 input,
 select,
@@ -169,6 +176,11 @@ textarea {
   box-shadow: 0 12px 30px rgba(49, 95, 87, 0.2);
 }
 
+.solid-button.danger-solid {
+  background: linear-gradient(135deg, #8f241c, var(--danger));
+  box-shadow: 0 12px 30px rgba(214, 59, 47, 0.18);
+}
+
 .outline-button {
   color: var(--brand-deep);
   background: transparent;
@@ -224,6 +236,26 @@ textarea {
 .finder-card,
 .state-card {
   padding: 28px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(36, 51, 47, 0.42);
+  backdrop-filter: blur(8px);
+}
+
+.confirm-dialog {
+  width: min(100%, 460px);
+  padding: 28px;
+  border-radius: var(--radius-lg);
+  background: #fffdf8;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 24px 80px rgba(36, 51, 47, 0.28);
 }
 
 .eyebrow {
@@ -389,6 +421,43 @@ textarea {
   color: var(--text-soft);
 }
 
+.tag-card-photo,
+.tag-detail-photo,
+.finder-profile-photo {
+  overflow: hidden;
+  border-radius: 18px;
+  background: rgba(255, 253, 248, 0.9);
+  border: 1px solid rgba(36, 51, 47, 0.08);
+}
+
+.tag-card-photo {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin-bottom: 14px;
+}
+
+.tag-detail-photo,
+.finder-profile-photo {
+  width: 160px;
+  aspect-ratio: 4 / 3;
+  flex: 0 0 auto;
+}
+
+.tag-card-photo img,
+.tag-detail-photo img,
+.finder-profile-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tag-detail-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
 .form-card form,
 .form-grid {
   display: grid;
@@ -397,6 +466,108 @@ textarea {
 
 .form-grid.two-columns {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.profile-photo-editor {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+  padding: 18px;
+  border: 1px solid rgba(36, 51, 47, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.profile-photo-preview {
+  display: grid;
+  place-items: center;
+  width: 180px;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px dashed rgba(49, 95, 87, 0.25);
+  border-radius: 16px;
+  background: rgba(255, 253, 248, 0.9);
+  color: var(--text-soft);
+  font-size: 14px;
+  text-align: center;
+}
+
+.profile-photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-photo-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.profile-upload-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-upload-button input {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.profile-photo-controls .muted-text {
+  width: 100%;
+  margin: 0;
+}
+
+.photo-crop-dialog {
+  width: min(100%, 720px);
+}
+
+.photo-crop-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(220px, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.photo-crop-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid rgba(36, 51, 47, 0.12);
+  border-radius: 18px;
+  background: rgba(36, 51, 47, 0.08);
+}
+
+.photo-crop-frame::after {
+  content: '';
+  position: absolute;
+  inset: 18px;
+  border: 2px solid rgba(255, 253, 248, 0.82);
+  border-radius: 14px;
+  box-shadow: 0 0 0 999px rgba(36, 51, 47, 0.2);
+  pointer-events: none;
+}
+
+.photo-crop-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center;
+}
+
+.photo-crop-controls {
+  display: grid;
+  gap: 14px;
+}
+
+.photo-crop-controls input[type='range'] {
+  accent-color: var(--accent);
 }
 
 .field-label {
@@ -420,6 +591,13 @@ textarea {
 .field-label textarea {
   min-height: 132px;
   resize: vertical;
+}
+
+.photo-crop-controls input[type='range'] {
+  min-height: 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
 }
 
 .form-note,
@@ -468,6 +646,38 @@ textarea {
 .filter-pill.is-active {
   color: #fff;
   background: var(--accent);
+}
+
+.record-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.record-section-heading .section-title,
+.record-section-heading .muted-text {
+  margin-bottom: 0;
+}
+
+.compact-filter-row {
+  justify-content: flex-end;
+  margin: 0;
+}
+
+.stacked-filter-group {
+  display: grid;
+  gap: 10px;
+  min-width: min(100%, 420px);
+}
+
+.pagination-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 18px;
 }
 
 .compact-state {
@@ -524,8 +734,13 @@ textarea {
 .finder-heading {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 18px;
+}
+
+.finder-heading > .status-chip,
+.tag-detail-heading > .status-chip {
+  margin-left: auto;
 }
 
 .finder-meta,
@@ -546,13 +761,63 @@ textarea {
   margin-top: 12px;
 }
 
+.finder-message-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(36, 51, 47, 0.08);
+}
+
+.finder-message-entry .muted-text {
+  margin: 6px 0 0;
+}
+
+.finder-message-dialog {
+  width: min(100%, 620px);
+}
+
+.modal-heading-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.modal-heading-row .finder-form-title {
+  margin-top: 12px;
+}
+
+.modal-close-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  color: var(--text-soft);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.modal-close-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .finder-message-form {
   display: grid;
   gap: 14px;
-  padding: 18px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.58);
-  border: 1px solid rgba(36, 51, 47, 0.08);
+}
+
+.dialog-actions {
+  justify-content: flex-end;
 }
 
 .owner-message-card {
@@ -1530,7 +1795,9 @@ textarea {
   .card-grid,
   .page-grid,
   .form-grid.two-columns,
+  .profile-photo-editor,
   .finder-heading,
+  .tag-detail-heading,
   .finder-meta,
   .summary-grid {
     grid-template-columns: 1fr;
@@ -1538,6 +1805,19 @@ textarea {
 
   .finder-heading {
     display: grid;
+  }
+
+  .tag-detail-heading {
+    display: grid;
+  }
+
+  .profile-photo-preview {
+    width: min(100%, 220px);
+  }
+
+  .tag-detail-photo,
+  .finder-profile-photo {
+    width: min(100%, 260px);
   }
 
   .site-header {
@@ -1619,6 +1899,20 @@ textarea {
 
   .home-page-redesign .home-footer-meta {
     justify-content: flex-start;
+  }
+
+  .record-section-heading,
+  .pagination-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .compact-filter-row {
+    justify-content: flex-start;
+  }
+
+  .photo-crop-layout {
+    grid-template-columns: 1fr;
   }
 }
 

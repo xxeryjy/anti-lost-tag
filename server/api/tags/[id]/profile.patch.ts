@@ -18,7 +18,15 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody<Record<string, unknown>>(event)
-  const profile = updateTagProfile(id, body as Parameters<typeof updateTagProfile>[1])
+  const displayName = typeof body.displayName === 'string' ? body.displayName.trim() : ''
+  if (!displayName) {
+    fail(400, 'DISPLAY_NAME_REQUIRED', '展示名称不能为空')
+  }
+
+  const profile = updateTagProfile(id, {
+    ...body,
+    displayName
+  } as Parameters<typeof updateTagProfile>[1])
 
   if (!profile) {
     fail(404, 'TAG_NOT_FOUND', '标签资料不存在')

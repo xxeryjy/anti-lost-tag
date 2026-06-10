@@ -1,4 +1,4 @@
-import type { PrivacyMessageRecord, ScanLogItem, TagRecord } from '~/types/smarttag'
+import type { DeliveryStatus, LocationSource, NotificationStatus, PaginatedList, PrivacyMessageRecord, ScanLogItem, TagRecord } from '~/types/smarttag'
 
 export function useOwnerTags() {
   const localePath = useLocalePath()
@@ -33,14 +33,33 @@ export function useOwnerTags() {
     return tags.value.find((tag) => tag.uid === uid) || null
   }
 
-  async function loadScans(tagId: number) {
-    const response = await $fetch<{ success: true; data: { items: ScanLogItem[] } }>(`/api/tags/${tagId}/scans`)
-    return response.data.items
+  async function loadScans(
+    tagId: number,
+    params: {
+      page?: number
+      pageSize?: number
+      locationSource?: LocationSource
+      notificationStatus?: NotificationStatus
+    } = {}
+  ) {
+    const response = await $fetch<{ success: true; data: PaginatedList<ScanLogItem> }>(`/api/tags/${tagId}/scans`, {
+      query: params
+    })
+    return response.data
   }
 
-  async function loadMessages(tagId: number) {
-    const response = await $fetch<{ success: true; data: { items: PrivacyMessageRecord[] } }>(`/api/tags/${tagId}/messages`)
-    return response.data.items
+  async function loadMessages(
+    tagId: number,
+    params: {
+      page?: number
+      pageSize?: number
+      deliveryStatus?: DeliveryStatus
+    } = {}
+  ) {
+    const response = await $fetch<{ success: true; data: PaginatedList<PrivacyMessageRecord> }>(`/api/tags/${tagId}/messages`, {
+      query: params
+    })
+    return response.data
   }
 
   return {
