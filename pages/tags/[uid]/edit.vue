@@ -242,7 +242,7 @@ async function confirmCroppedPhoto() {
   }))
 
   if (data) {
-    form.photoUrl = croppedPhoto.dataUrl
+    form.photoUrl = data.url
     setSuccess(t('tag.photoUploadSuccess'))
     clearPendingPhoto()
   }

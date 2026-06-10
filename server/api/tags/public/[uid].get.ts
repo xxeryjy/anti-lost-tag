@@ -1,6 +1,8 @@
 import { findTagByUid } from '~/server/services/mock-data'
+import { getTagByUid } from '~/server/services/tags'
 import { fail, ok } from '~/server/utils/api-response'
-import { getMockSessionUserId } from '~/server/utils/session'
+import { getApiDataSource } from '~/server/utils/data-source'
+import { getSessionUserId } from '~/server/utils/session'
 import type { TagProfile } from '~/types/smarttag'
 
 function toPublicProfile(profile: TagProfile | null) {
@@ -20,13 +22,17 @@ function toPublicProfile(profile: TagProfile | null) {
   }
 }
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   const uid = getRouterParam(event, 'uid') || ''
-  const tag = findTagByUid(uid)
+  const tag = getApiDataSource(event) === 'database'
+    ? await getTagByUid(uid)
+    : findTagByUid(uid)
+
   if (!tag) {
     fail(404, 'TAG_NOT_FOUND', '标签不存在')
   }
-  const userId = getMockSessionUserId(event)
+
+  const userId = getSessionUserId(event)
 
   return ok({
     uid: tag.uid,

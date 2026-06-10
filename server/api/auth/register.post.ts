@@ -1,3 +1,4 @@
+import { createAndSendAuthCode } from '~/server/services/auth-codes'
 import { createAuthUser, findAuthUserByEmail, normalizePreferredLocale, toAuthUserDto } from '~/server/services/auth-users'
 import { createUser, findUserByEmail } from '~/server/services/mock-data'
 import { fail, ok } from '~/server/utils/api-response'
@@ -34,8 +35,22 @@ export default defineEventHandler(async (event) => {
 
   const passwordHash = await hashPassword(body.password)
   const user = await createAuthUser(body.email, passwordHash, body.preferredLocale)
+  const codeDelivery = await createAndSendAuthCode(event, {
+    userId: user.id,
+    email: user.email,
+    purpose: 'EMAIL_VERIFY'
+  })
+  if (!codeDelivery.mailResult.mockMode && !codeDelivery.mailResult.sent) {
+    fail(500, 'EMAIL_SEND_FAILED', '验证码邮件发送失败，请稍后重试')
+  }
+
   return ok({
     user: toAuthUserDto(user),
-    nextStep: 'VERIFY_EMAIL'
+    nextStep: 'VERIFY_EMAIL',
+    codeDelivery: {
+      mockMode: codeDelivery.mailResult.mockMode,
+      provider: codeDelivery.mailResult.provider,
+      expiresAt: codeDelivery.expiresAt.toISOString()
+    }
   })
 })

@@ -10,7 +10,15 @@ function createSessionSignature(value: string, secret: string) {
 
 function getSessionSecret(event: H3Event) {
   const config = useRuntimeConfig(event)
-  return String(config.sessionSecret || 'dev-session-secret')
+  const secret = String(config.sessionSecret || 'dev-session-secret')
+  if (process.env.NODE_ENV === 'production' && (secret === 'dev-session-secret' || secret.length < 32)) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: '生产环境 SESSION_SECRET 必须使用至少 32 位的非默认密钥'
+    })
+  }
+
+  return secret
 }
 
 function signSessionUserId(userId: number, event: H3Event) {

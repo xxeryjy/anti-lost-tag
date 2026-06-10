@@ -54,6 +54,11 @@ enum DeliveryStatus {
   FAILED
 }
 
+enum AuthCodePurpose {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+}
+
 model User {
   id               Int             @id @default(autoincrement())
   email            String          @unique
@@ -64,8 +69,24 @@ model User {
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   tags             Tag[]
+  authCodes        AuthCode[]
 
   @@index([preferredLocale])
+}
+
+model AuthCode {
+  id          Int             @id @default(autoincrement())
+  userId      Int
+  email       String
+  purpose     AuthCodePurpose
+  codeHash    String
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime        @default(now())
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email, purpose, expiresAt])
+  @@index([userId, purpose, consumedAt])
 }
 
 model Tag {

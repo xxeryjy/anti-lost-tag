@@ -1,3 +1,4 @@
+import { consumeAuthCode } from '~/server/services/auth-codes'
 import { findAuthUserByEmail, markAuthUserEmailVerified, toAuthUserDto } from '~/server/services/auth-users'
 import { findUserByEmail, verifyUserEmail } from '~/server/services/mock-data'
 import { fail, ok } from '~/server/utils/api-response'
@@ -40,7 +41,11 @@ export default defineEventHandler(async (event) => {
   if (user.emailVerifiedAt) {
     fail(409, 'EMAIL_ALREADY_VERIFIED', '邮箱已完成验证')
   }
-  if (body.code !== config.authMockCode) {
+  if (!(await consumeAuthCode(event, {
+    email: body.email,
+    purpose: 'EMAIL_VERIFY',
+    code: body.code
+  }))) {
     fail(400, 'INVALID_VERIFICATION_CODE', '验证码错误')
   }
 

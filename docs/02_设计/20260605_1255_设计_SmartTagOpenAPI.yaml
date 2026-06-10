@@ -395,6 +395,34 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
   /tags/{id}/profile:
+    get:
+      tags:
+        - Tags
+      summary: 获取标签资料
+      operationId: getTagProfile
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TagId'
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTagProfileResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: 标签或资料不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
     patch:
       tags:
         - Tags
@@ -630,6 +658,8 @@ paths:
           $ref: '#/components/responses/UploadNotAllowed'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '500':
           $ref: '#/components/responses/InternalError'
 components:
@@ -754,6 +784,11 @@ components:
                   timestamp: '2026-06-05T04:12:30.000Z'
     RateLimited:
       description: 请求过于频繁
+      headers:
+        Retry-After:
+          description: 建议客户端等待的秒数
+          schema:
+            type: integer
       content:
         application/json:
           schema:
@@ -769,18 +804,36 @@ components:
                   requestId: req_01JX1234567890
                   timestamp: '2026-06-05T04:12:30.000Z'
     UploadNotAllowed:
-      description: 上传文件不符合要求
+      description: 上传文件不符合要求。服务端会校验真实图片文件头，不只依赖浏览器上报的 MIME。
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
           examples:
+            imageRequired:
+              value:
+                success: false
+                error:
+                  code: IMAGE_REQUIRED
+                  message: 请上传图片文件
+                meta:
+                  requestId: req_01JX1234567890
+                  timestamp: '2026-06-05T04:12:30.000Z'
             uploadNotAllowed:
               value:
                 success: false
                 error:
                   code: UNSUPPORTED_IMAGE_TYPE
-                  message: 上传文件不符合要求
+                  message: 仅支持 JPG、PNG 或 WebP 图片
+                meta:
+                  requestId: req_01JX1234567890
+                  timestamp: '2026-06-05T04:12:30.000Z'
+            imageTooLarge:
+              value:
+                success: false
+                error:
+                  code: IMAGE_TOO_LARGE
+                  message: 图片不能超过 5MB
                 meta:
                   requestId: req_01JX1234567890
                   timestamp: '2026-06-05T04:12:30.000Z'
@@ -797,6 +850,15 @@ components:
                 error:
                   code: INTERNAL_ERROR
                   message: 服务器内部错误
+                meta:
+                  requestId: req_01JX1234567890
+                  timestamp: '2026-06-05T04:12:30.000Z'
+            emailSendFailed:
+              value:
+                success: false
+                error:
+                  code: EMAIL_SEND_FAILED
+                  message: 验证码邮件发送失败，请稍后重试
                 meta:
                   requestId: req_01JX1234567890
                   timestamp: '2026-06-05T04:12:30.000Z'
@@ -966,6 +1028,8 @@ components:
               type: string
               enum:
                 - VERIFY_EMAIL
+            codeDelivery:
+              $ref: '#/components/schemas/AuthCodeDelivery'
         meta:
           $ref: '#/components/schemas/Meta'
     EmailRequest:
@@ -976,6 +1040,25 @@ components:
         email:
           type: string
           format: email
+    AuthCodeDelivery:
+      type: object
+      required:
+        - mockMode
+        - provider
+      properties:
+        mockMode:
+          type: boolean
+          description: true 表示未启用真实邮件供应商，开发环境仍使用 AUTH_MOCK_CODE。
+        provider:
+          type: string
+          enum:
+            - none
+            - console
+            - resend
+        expiresAt:
+          type: string
+          format: date-time
+          description: 数据库验证码过期时间。
     LoginRequest:
       type: object
       required:
@@ -1063,6 +1146,11 @@ components:
               type: boolean
             mockMode:
               type: boolean
+            provider:
+              type: string
+            expiresAt:
+              type: string
+              format: date-time
         meta:
           $ref: '#/components/schemas/Meta'
     VerifyEmailConfirmResponse:
@@ -1106,6 +1194,11 @@ components:
               type: boolean
             mockMode:
               type: boolean
+            provider:
+              type: string
+            expiresAt:
+              type: string
+              format: date-time
         meta:
           $ref: '#/components/schemas/Meta'
     ResetPasswordRequest:
@@ -1493,6 +1586,9 @@ components:
               $ref: '#/components/schemas/TagProfile'
         meta:
           $ref: '#/components/schemas/Meta'
+    GetTagProfileResponse:
+      allOf:
+        - $ref: '#/components/schemas/UpdateTagProfileResponse'
     ScanLogItem:
       type: object
       required:
@@ -1527,6 +1623,14 @@ components:
         country:
           type: string
           nullable: true
+        ipAddress:
+          type: string
+          nullable: true
+          description: 主人端记录接口可见，用于排查重复扫码和通知抑制。
+        userAgent:
+          type: string
+          nullable: true
+          description: 主人端记录接口可见，用于排查扫码来源。
         mapUrl:
           type: string
           format: uri
@@ -1756,19 +1860,10 @@ components:
         data:
           type: object
           required:
-            - scanLogId
-            - notificationSuppressed
+            - scan
           properties:
-            scanLogId:
-              type: integer
-            notificationSuppressed:
-              type: boolean
-            notificationStatus:
-              $ref: '#/components/schemas/NotificationStatus'
-            mapUrl:
-              type: string
-              format: uri
-              nullable: true
+            scan:
+              $ref: '#/components/schemas/ScanLogItem'
         meta:
           $ref: '#/components/schemas/Meta'
     CreatePrivacyMessageRequest:
@@ -1807,11 +1902,14 @@ components:
           required:
             - messageId
             - deliveryStatus
+            - messageRecord
           properties:
             messageId:
               type: integer
             deliveryStatus:
               $ref: '#/components/schemas/DeliveryStatus'
+            messageRecord:
+              $ref: '#/components/schemas/PrivacyMessageItem'
         meta:
           $ref: '#/components/schemas/Meta'
     UploadImageResponse:
@@ -1832,6 +1930,7 @@ components:
           properties:
             url:
               type: string
-              format: uri
+              example: /api/uploads/image/1781074389368-cb484af5-652e-4835-9593-18c4e0ca8089.jpg
+              description: 当前本地开发实现返回同源相对 URL；生产对象存储可返回完整 HTTPS URL。
         meta:
           $ref: '#/components/schemas/Meta'

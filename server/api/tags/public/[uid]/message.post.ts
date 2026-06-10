@@ -1,14 +1,24 @@
 import { canCreatePrivacyMessage, createPrivacyMessage, findTagByUid } from '~/server/services/mock-data'
+import { sendPrivacyMessageNotificationEmail } from '~/server/services/mail'
+import { createPublicPrivacyMessage, getTagByUid, hasRecentPrivacyMessage, updatePrivacyMessageDeliveryStatus } from '~/server/services/tags'
 import { fail, ok } from '~/server/utils/api-response'
-
-function getRequestIp(event: H3Event) {
-  const forwardedFor = getHeader(event, 'x-forwarded-for')?.split(',')[0]?.trim()
-  return forwardedFor || event.node.req.socket.remoteAddress || '127.0.0.1'
-}
+import { getApiDataSource } from '~/server/utils/data-source'
+import { enforceIpRateLimit, getRequestIp, readPositiveRuntimeNumber } from '~/server/utils/request'
 
 export default defineEventHandler(async (event) => {
   const uid = getRouterParam(event, 'uid') || ''
-  const tag = findTagByUid(uid)
+  const config = useRuntimeConfig(event)
+  enforceIpRateLimit(event, {
+    scope: `public-message:${uid}`,
+    maxRequests: readPositiveRuntimeNumber(config.publicMessageRateLimitMax, 10),
+    windowMs: readPositiveRuntimeNumber(config.publicMessageRateLimitWindowMs, 5 * 60 * 1000)
+  })
+
+  const dataSource = getApiDataSource(event)
+  const tag = dataSource === 'database'
+    ? await getTagByUid(uid)
+    : findTagByUid(uid)
+
   if (!tag) {
     fail(404, 'TAG_NOT_FOUND', '标签不存在')
   }
@@ -26,6 +36,43 @@ export default defineEventHandler(async (event) => {
   }
 
   const ipAddress = getRequestIp(event)
+
+  if (dataSource === 'database') {
+    if (await hasRecentPrivacyMessage(tag.id, ipAddress)) {
+      fail(429, 'RATE_LIMITED', '留言提交过于频繁，请稍后再试')
+    }
+
+    let record = await createPublicPrivacyMessage(tag.id, {
+      finderName: body.finderName?.trim() || null,
+      finderContact: body.finderContact?.trim() || null,
+      message
+    }, {
+      ipAddress
+    })
+
+    if (tag.profile?.notificationEmail) {
+      const mailResult = await sendPrivacyMessageNotificationEmail(event, {
+        to: tag.profile.notificationEmail,
+        tagUid: tag.uid,
+        displayName: tag.profile.displayName,
+        finderName: record.finderName,
+        finderContact: record.finderContact,
+        message: record.message
+      })
+      if (mailResult.sent) {
+        record = await updatePrivacyMessageDeliveryStatus(record.id, 'SENT')
+      } else if (!mailResult.mockMode) {
+        record = await updatePrivacyMessageDeliveryStatus(record.id, 'FAILED')
+      }
+    }
+
+    return ok({
+      messageId: record.id,
+      deliveryStatus: record.deliveryStatus,
+      messageRecord: record
+    })
+  }
+
   const submitState = canCreatePrivacyMessage(uid, ipAddress)
   if (submitState.kind === 'RATE_LIMITED') {
     fail(429, 'RATE_LIMITED', '留言提交过于频繁，请稍后再试')

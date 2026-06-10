@@ -13,7 +13,7 @@ export function ok<T>(data: T) {
   }
 }
 
-export function fail(statusCode: number, code: string, message: string) {
+export function fail(statusCode: number, code: string, message: string): never {
   throw createError({
     statusCode,
     statusMessage: message,
