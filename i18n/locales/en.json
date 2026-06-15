@@ -175,7 +175,7 @@
     "errorEmailSendFailed": "The email could not be sent right now. Please try again later.",
     "sendVerificationAction": "Send code",
     "registerAndVerifyAction": "Register and verify email",
-    "registerFormHint": "Send a verification code to your email first, then enter the code and password to finish registration. In local development mode, you can open the dev mailbox to view the email.",
+    "registerFormHint": "By registering, you confirm that you have read and agree to the Privacy Policy and consent to the handling of your registration information as described there.",
     "errorRegisterRequired": "Enter your email, verification code, and password."
   },
   "finder": {

@@ -175,7 +175,7 @@
     "errorEmailSendFailed": "当前无法发送邮件，请稍后再试。",
     "sendVerificationAction": "发送验证码",
     "registerAndVerifyAction": "注册并验证邮箱",
-    "registerFormHint": "请先向邮箱发送验证码，再输入验证码和密码完成注册。本地开发模式下，你可以打开开发邮箱查看邮件。",
+    "registerFormHint": "注册即表示你已阅读并同意《隐私协议》，并同意我们按照协议处理你的注册信息。",
     "errorRegisterRequired": "请输入邮箱、验证码和密码。"
   },
   "finder": {
