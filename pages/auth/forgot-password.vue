@@ -1,10 +1,12 @@
 <script setup lang="ts">
 const { t } = useI18n()
 const localePath = useLocalePath()
+const route = useRoute()
 const { getAuthErrorMessage } = useAuthErrorMessage()
 const form = reactive({
-  email: 'owner@smarttag.local'
+  email: typeof route.query.email === 'string' ? route.query.email : ''
 })
+const devMailboxUrl = ref('')
 const { isLoading, errorMessage, errorCode, successMessage, run, setSuccess, setError } = useApiRequest()
 
 async function submitForgotPassword() {
@@ -13,7 +15,7 @@ async function submitForgotPassword() {
     return
   }
 
-  const data = await run<{ accepted: boolean; mockMode: boolean }>(() => $fetch('/api/auth/forgot-password', {
+  const data = await run<{ accepted: boolean; devMailboxUrl?: string | null }>(() => $fetch('/api/auth/forgot-password', {
     method: 'POST',
     body: form
   }))
@@ -23,8 +25,8 @@ async function submitForgotPassword() {
     return
   }
 
+  devMailboxUrl.value = data.devMailboxUrl || ''
   setSuccess(t('auth.forgotSuccess'))
-  await navigateTo(localePath(`/auth/reset-password?email=${encodeURIComponent(form.email)}`))
 }
 
 useHead({
@@ -41,13 +43,21 @@ useHead({
         <form @submit.prevent="submitForgotPassword">
           <label class="field-label">
             {{ t('auth.email') }}
-            <input v-model="form.email" type="email" />
+            <input v-model="form.email" type="email" autocomplete="username" />
           </label>
           <button class="solid-button" type="submit" :disabled="isLoading">
             {{ isLoading ? t('common.submitting') : t('auth.forgotAction') }}
           </button>
         </form>
-        <p class="form-note">{{ t('auth.mockCodeHint') }}</p>
+        <div v-if="devMailboxUrl" class="auth-action-row">
+          <NuxtLink class="ghost-button" :to="localePath(devMailboxUrl)">
+            {{ t('auth.openDevMailboxAction') }}
+          </NuxtLink>
+          <NuxtLink class="ghost-button" :to="localePath('/auth/login')">
+            {{ t('auth.loginAction') }}
+          </NuxtLink>
+        </div>
+        <p class="form-note">{{ t('auth.forgotFlowHint') }}</p>
         <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
         <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>
       </div>

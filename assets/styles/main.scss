@@ -634,6 +634,100 @@ textarea {
   border: 1px solid rgba(29, 111, 104, 0.22);
 }
 
+.auth-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.auth-register-card {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.auth-step-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 24px;
+}
+
+.auth-step-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(29, 111, 104, 0.14);
+  background: rgba(255, 255, 255, 0.54);
+  color: var(--text-soft);
+  font-size: 14px;
+}
+
+.auth-step-chip.is-active {
+  border-color: rgba(29, 111, 104, 0.32);
+  background: rgba(29, 111, 104, 0.12);
+  color: var(--text);
+}
+
+.auth-step-chip.is-done {
+  color: var(--accent);
+}
+
+.auth-step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(29, 111, 104, 0.12);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.auth-step-divider {
+  flex: 1;
+  min-width: 24px;
+  height: 1px;
+  background: rgba(29, 111, 104, 0.14);
+}
+
+.mailbox-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.mailbox-card {
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.mailbox-meta {
+  margin: 0 0 8px;
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.mailbox-subject {
+  margin: 0 0 12px;
+  font-size: 20px;
+}
+
+.mailbox-body {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: inherit;
+  color: var(--text);
+  background: transparent;
+}
+
 .filter-row {
   margin: 18px 0;
 }

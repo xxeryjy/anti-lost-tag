@@ -3,10 +3,16 @@ const { t } = useI18n()
 const route = useRoute()
 const localePath = useLocalePath()
 const { getAuthErrorMessage } = useAuthErrorMessage()
+const hasPrefilledLink = computed(() => {
+  return typeof route.query.email === 'string'
+    && !!route.query.email
+    && typeof route.query.code === 'string'
+    && !!route.query.code
+})
 const form = reactive({
-  email: typeof route.query.email === 'string' ? route.query.email : 'owner@smarttag.local',
-  code: '123456',
-  newPassword: 'Password456'
+  email: typeof route.query.email === 'string' ? route.query.email : '',
+  code: typeof route.query.code === 'string' ? route.query.code : '',
+  newPassword: ''
 })
 const { isLoading, errorMessage, errorCode, successMessage, run, setSuccess, setError } = useApiRequest()
 
@@ -30,6 +36,19 @@ async function submitResetPassword() {
   await navigateTo(localePath('/auth/login'))
 }
 
+watch(
+  () => [route.query.email, route.query.code],
+  ([email, code]) => {
+    if (typeof email === 'string') {
+      form.email = email
+    }
+    if (typeof code === 'string') {
+      form.code = code
+    }
+  },
+  { immediate: true }
+)
+
 useHead({
   title: t('auth.resetTitle')
 })
@@ -44,20 +63,21 @@ useHead({
         <form @submit.prevent="submitResetPassword">
           <label class="field-label">
             {{ t('auth.email') }}
-            <input v-model="form.email" type="email" />
+            <input v-model="form.email" type="email" autocomplete="username" :readonly="hasPrefilledLink" />
           </label>
           <label class="field-label">
             {{ t('auth.verificationCode') }}
-            <input v-model="form.code" type="text" />
+            <input v-model="form.code" type="text" autocomplete="one-time-code" :readonly="hasPrefilledLink" />
           </label>
           <label class="field-label">
             {{ t('auth.newPassword') }}
-            <input v-model="form.newPassword" type="password" />
+            <input v-model="form.newPassword" type="password" autocomplete="new-password" />
           </label>
           <button class="solid-button" type="submit" :disabled="isLoading">
             {{ isLoading ? t('common.submitting') : t('auth.resetAction') }}
           </button>
         </form>
+        <p class="form-note">{{ t('auth.resetFlowHint') }}</p>
         <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
         <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>
       </div>

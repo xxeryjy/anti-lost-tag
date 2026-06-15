@@ -5,8 +5,8 @@ const route = useRoute()
 const authStore = useAuthStore()
 const { getAuthErrorMessage } = useAuthErrorMessage()
 const form = reactive({
-  email: 'owner@smarttag.local',
-  password: 'Password123'
+  email: typeof route.query.email === 'string' ? route.query.email : '',
+  password: ''
 })
 const { isLoading, errorMessage, errorCode, successMessage, run, setSuccess, setError } = useApiRequest()
 
@@ -52,20 +52,20 @@ useHead({
         <form @submit.prevent="submitLogin">
           <label class="field-label">
             {{ t('auth.email') }}
-            <input v-model="form.email" type="email" />
+            <input v-model="form.email" type="email" autocomplete="username" />
           </label>
           <label class="field-label">
             {{ t('auth.password') }}
-            <input v-model="form.password" type="password" />
+            <input v-model="form.password" type="password" autocomplete="current-password" />
           </label>
           <div class="stack-actions">
             <button class="solid-button" type="submit" :disabled="isLoading">
               {{ isLoading ? t('common.submitting') : t('auth.loginAction') }}
             </button>
             <NuxtLink class="ghost-button" :to="localePath('/auth/forgot-password')">{{ t('auth.forgotPassword') }}</NuxtLink>
+            <NuxtLink class="ghost-button" :to="localePath('/auth/register')">{{ t('nav.register') }}</NuxtLink>
           </div>
         </form>
-        <p class="form-note">{{ t('auth.mockAccountHint') }}</p>
         <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
         <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>
       </div>

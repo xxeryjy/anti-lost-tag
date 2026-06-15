@@ -50,7 +50,10 @@ export default defineEventHandler(async (event) => {
     codeDelivery: {
       mockMode: codeDelivery.mailResult.mockMode,
       provider: codeDelivery.mailResult.provider,
-      expiresAt: codeDelivery.expiresAt.toISOString()
+      expiresAt: codeDelivery.expiresAt.toISOString(),
+      devMailboxUrl: codeDelivery.mailResult.provider === 'local'
+        ? `/dev/mailbox?email=${encodeURIComponent(user.email)}`
+        : null
     }
   })
 })

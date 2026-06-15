@@ -41,6 +41,19 @@ const canSendMessage = computed(() => Boolean(tag.value?.profile?.canSendMessage
 const isOwner = computed(() => Boolean(tag.value?.viewer?.isOwner))
 const displayName = computed(() => tag.value?.profile?.displayName || uid.value)
 const displaySubtitle = computed(() => tag.value?.profile?.breed || tag.value?.profile?.customLabel || t('finder.genericLabel'))
+const ownerPhoneLink = computed(() => {
+  const phone = tag.value?.profile?.ownerPhone?.trim()
+  return phone ? `tel:${phone.replace(/\s+/g, '')}` : ''
+})
+const notificationEmailLink = computed(() => {
+  const email = tag.value?.profile?.notificationEmail?.trim()
+  if (!email) {
+    return ''
+  }
+
+  const subject = encodeURIComponent(t('finder.emailSubject', { name: displayName.value }))
+  return `mailto:${email}?subject=${subject}`
+})
 
 function buildMapUrl(latitude: number, longitude: number) {
   return `https://maps.google.com/?q=${latitude},${longitude}`
@@ -318,6 +331,20 @@ useHead({
         <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>
 
         <div class="inline-actions">
+          <a
+            v-if="!isPrivacyMode && ownerPhoneLink"
+            class="solid-button"
+            :href="ownerPhoneLink"
+          >
+            {{ t('finder.callOwner') }}
+          </a>
+          <a
+            v-if="!isPrivacyMode && notificationEmailLink"
+            class="outline-button"
+            :href="notificationEmailLink"
+          >
+            {{ t('finder.emailOwner') }}
+          </a>
           <button class="solid-button" type="button" @click="openFinderLocation">
             {{ t('finder.showLocation') }}
           </button>

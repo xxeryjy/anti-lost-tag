@@ -140,8 +140,8 @@
     "registerTitle": "Register account",
     "registerAction": "Submit registration",
     "registeredAction": "Submitted, verify next",
-    "registerSuccess": "Registration succeeded. Use the fixed code to verify your email.",
-    "verifyEyebrow": "Mock Verify",
+    "registerSuccess": "Registration succeeded. Check your inbox and complete email verification.",
+    "verifyEyebrow": "Email Verify",
     "verifyTitle": "Complete email verification",
     "verifyAction": "Verify email",
     "verifySuccess": "Email verified. Please log in.",
@@ -149,7 +149,7 @@
     "forgotEyebrow": "Password Recovery",
     "forgotTitle": "Request password recovery",
     "forgotAction": "Send reset request",
-    "forgotSuccess": "Recovery request confirmed. Opening the reset page.",
+    "forgotSuccess": "Recovery request accepted. Check your email for the reset link.",
     "resetEyebrow": "Reset Password",
     "resetTitle": "Reset password",
     "resetAction": "Confirm reset",
@@ -164,7 +164,15 @@
     "errorUserNotFound": "No account was found for this email.",
     "errorEmailAlreadyVerified": "This email has already been verified. Please log in.",
     "errorInvalidVerificationCode": "The verification code is incorrect. Please check and try again.",
-    "errorRequestFailed": "Request failed. Please try again later."
+    "errorRequestFailed": "Request failed. Please try again later.",
+    "registerFlowHint": "After registration, we will send a verification email. In local development mode, you can open the dev mailbox to continue.",
+    "verifyResentSuccess": "A new verification email has been sent.",
+    "verifyFlowHint": "Open the email link directly, or paste the verification code here to finish the step.",
+    "resendVerificationAction": "Resend email",
+    "openDevMailboxAction": "Open dev mailbox",
+    "forgotFlowHint": "We will send a password reset email. In local development mode, it will appear in the dev mailbox.",
+    "resetFlowHint": "Open the reset link from email, or paste the code from the email here.",
+    "errorEmailSendFailed": "The email could not be sent right now. Please try again later."
   },
   "finder": {
     "pageTitle": "Finder Page",
@@ -186,6 +194,9 @@
     "ownerPhone": "Owner phone",
     "backupPhone": "Backup phone",
     "email": "Notification email",
+    "callOwner": "Call owner",
+    "emailOwner": "Email owner",
+    "emailSubject": "About {name}",
     "showLocation": "Show Location",
     "sendPrivacyMessage": "Enter private message flow",
     "loginToActivate": "Login to activate",
@@ -306,5 +317,14 @@
     "deleteTagConfirmEyebrow": "Danger action",
     "deleteTagConfirmTitle": "Delete this tag?",
     "deleteTagConfirmCopy": "After deletion, this tag's public profile, scan records, and private messages will be removed from the current mock data. This action cannot be undone in the local session."
+  },
+  "devMailbox": {
+    "eyebrow": "Local Mailbox",
+    "title": "Development mailbox",
+    "allHint": "This page lists emails captured locally in development mode.",
+    "filteredHint": "Showing local emails sent to {email}.",
+    "refreshAction": "Refresh inbox",
+    "empty": "No local emails yet.",
+    "loadFailed": "Failed to load the development mailbox."
   }
 }

@@ -6,7 +6,6 @@ const { t } = useI18n()
   <footer class="site-footer">
     <div class="site-footer-bar">
       <span>{{ t('footer.copy') }}</span>
-      <span>{{ t('footer.localMode') }}</span>
     </div>
   </footer>
 </template>

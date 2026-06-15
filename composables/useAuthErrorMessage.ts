@@ -8,7 +8,8 @@ export function useAuthErrorMessage() {
     EMAIL_ALREADY_EXISTS: 'auth.errorEmailAlreadyExists',
     USER_NOT_FOUND: 'auth.errorUserNotFound',
     EMAIL_ALREADY_VERIFIED: 'auth.errorEmailAlreadyVerified',
-    INVALID_VERIFICATION_CODE: 'auth.errorInvalidVerificationCode'
+    INVALID_VERIFICATION_CODE: 'auth.errorInvalidVerificationCode',
+    EMAIL_SEND_FAILED: 'auth.errorEmailSendFailed'
   }
 
   function getAuthErrorMessage(code?: string, fallbackKey = 'auth.errorRequestFailed') {

@@ -22,6 +22,19 @@ function hashAuthCode(event: H3Event, email: string, purpose: AuthCodePurpose, c
     .digest('hex')
 }
 
+function buildAuthActionUrl(event: H3Event, payload: { email: string; code: string; purpose: AuthCodePurpose }) {
+  const appUrl = String(useRuntimeConfig(event).public.appUrl || 'http://localhost:3000').replace(/\/$/, '')
+  const query = new URLSearchParams({
+    email: normalizeEmail(payload.email),
+    code: payload.code
+  })
+  const path = payload.purpose === 'EMAIL_VERIFY'
+    ? '/auth/register'
+    : '/auth/reset-password'
+
+  return `${appUrl}${path}?${query.toString()}`
+}
+
 function isSameHash(left: string, right: string) {
   const leftBuffer = Buffer.from(left, 'hex')
   const rightBuffer = Buffer.from(right, 'hex')
@@ -68,7 +81,12 @@ export async function createAndSendAuthCode(
     to: normalizedEmail,
     code,
     purpose: payload.purpose,
-    expiresMinutes
+    expiresMinutes,
+    actionUrl: buildAuthActionUrl(event, {
+      email: normalizedEmail,
+      code,
+      purpose: payload.purpose
+    })
   })
 
   return {
