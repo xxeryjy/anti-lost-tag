@@ -646,53 +646,30 @@ textarea {
   margin: 0 auto;
 }
 
-.auth-step-strip {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 12px 0 24px;
+.auth-register-grid {
+  align-items: end;
 }
 
-.auth-step-chip {
-  display: inline-flex;
-  align-items: center;
+.auth-register-span-two {
+  grid-column: 1 / -1;
+}
+
+.auth-inline-action-field {
+  gap: 8px;
+}
+
+.auth-inline-input-group {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
-  padding: 10px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(29, 111, 104, 0.14);
-  background: rgba(255, 255, 255, 0.54);
-  color: var(--text-soft);
-  font-size: 14px;
 }
 
-.auth-step-chip.is-active {
-  border-color: rgba(29, 111, 104, 0.32);
-  background: rgba(29, 111, 104, 0.12);
-  color: var(--text);
+.auth-inline-input-group .ghost-button {
+  min-height: 48px;
 }
 
-.auth-step-chip.is-done {
-  color: var(--accent);
-}
-
-.auth-step-index {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  background: rgba(29, 111, 104, 0.12);
-  color: var(--accent);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.auth-step-divider {
-  flex: 1;
-  min-width: 24px;
-  height: 1px;
-  background: rgba(29, 111, 104, 0.14);
+.auth-register-actions {
+  margin-top: 4px;
 }
 
 .mailbox-list {

@@ -13,6 +13,10 @@ export function useAuthErrorMessage() {
   }
 
   function getAuthErrorMessage(code?: string, fallbackKey = 'auth.errorRequestFailed') {
+    if (code === 'BAD_REQUEST') {
+      return t('auth.errorRegisterRequired')
+    }
+
     return t(code && authErrorKeys[code] ? authErrorKeys[code] : fallbackKey)
   }
 
