@@ -207,6 +207,9 @@ async function loadFinderTag() {
     tag.value = response.data
 
     if (response.data.status === 'INACTIVE') {
+      if (response.data.viewer.isAuthenticated && !isPreview.value) {
+        await navigateTo(localePath(`/tags/${response.data.uid}/activate`))
+      }
       return
     }
 
@@ -234,6 +237,10 @@ onMounted(() => {
 
 useHead({
   title: computed(() => `${t('finder.pageTitle')} - ${uid.value}`)
+})
+
+definePageMeta({
+  layout: 'minimal'
 })
 </script>
 
@@ -348,6 +355,13 @@ useHead({
           <button class="solid-button" type="button" @click="openFinderLocation">
             {{ t('finder.showLocation') }}
           </button>
+          <NuxtLink
+            v-if="!tag.viewer.isAuthenticated"
+            class="outline-button"
+            :to="localePath('/auth/login?redirect=%2Fdashboard%2Ftags')"
+          >
+            {{ t('finder.ownerContinue') }}
+          </NuxtLink>
           <NuxtLink v-if="isOwner" class="outline-button" :to="localePath(`/dashboard/tags/${tag.uid}`)">
             {{ t('finder.backToOwnerDetail') }}
           </NuxtLink>

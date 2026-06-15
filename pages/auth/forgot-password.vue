@@ -32,6 +32,10 @@ async function submitForgotPassword() {
 useHead({
   title: t('auth.forgotTitle')
 })
+
+definePageMeta({
+  layout: 'minimal'
+})
 </script>
 
 <template>

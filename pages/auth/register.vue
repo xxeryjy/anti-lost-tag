@@ -123,6 +123,10 @@ watch(
 useHead({
   title: t('auth.registerTitle')
 })
+
+definePageMeta({
+  layout: 'minimal'
+})
 </script>
 
 <template>

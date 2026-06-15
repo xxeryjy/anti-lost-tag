@@ -210,175 +210,183 @@ useHead({
         <h1 class="section-title">{{ t('finder.notFoundTitle') }}</h1>
       </div>
 
-      <div v-else class="surface-card">
-        <div class="tag-detail-heading">
-          <div v-if="currentTag.profile?.photoUrl" class="tag-detail-photo">
-            <img :src="currentTag.profile.photoUrl" :alt="currentTag.profile.displayName || currentTag.uid" />
-          </div>
-          <div>
-            <span class="eyebrow">{{ t('dashboard.detailEyebrow') }}</span>
-            <h1 class="section-title">{{ currentTag.profile?.displayName || currentTag.uid }}</h1>
-          </div>
-          <span class="status-chip" :class="`status-${currentTag.status.toLowerCase()}`">{{ currentTag.status }}</span>
-        </div>
+      <template v-else>
+        <MobilePageHeader
+          :back-to="localePath('/dashboard/tags')"
+          :back-label="t('dashboard.backToTags')"
+          :eyebrow="t('dashboard.detailEyebrow')"
+          :title="t('dashboard.detailTitle')"
+        />
 
-        <div class="summary-grid" style="margin-top: 18px;">
-          <div class="meta-box">
-            <strong>{{ t('dashboard.uid') }}</strong>
-            <p class="muted-text">{{ currentTag.uid }}</p>
-          </div>
-          <div class="meta-box">
-            <strong>{{ t('dashboard.updatedAt') }}</strong>
-            <p class="muted-text">{{ currentTag.updatedAt }}</p>
-          </div>
-        </div>
-
-        <div class="inline-actions" style="margin-top: 18px;">
-          <NuxtLink class="solid-button" :to="localePath(`/tags/${currentTag.uid}/edit`)">
-            {{ t('dashboard.editProfile') }}
-          </NuxtLink>
-          <NuxtLink class="outline-button" :to="`${localePath(`/t/${currentTag.uid}`)}?preview=1`">
-            {{ t('dashboard.previewFinder') }}
-          </NuxtLink>
-          <button
-            v-if="currentTag.status !== 'LOST'"
-            class="outline-button danger-action"
-            type="button"
-            :disabled="isLoading"
-            @click="openStatusConfirm('LOST')"
-          >
-            {{ t('dashboard.enableLost') }}
-          </button>
-          <button
-            v-else
-            class="outline-button"
-            type="button"
-            :disabled="isLoading"
-            @click="openStatusConfirm('ACTIVE')"
-          >
-            {{ t('dashboard.disableLost') }}
-          </button>
-          <button
-            class="outline-button danger-action"
-            type="button"
-            :disabled="isLoading"
-            @click="openDeleteConfirm"
-          >
-            {{ t('dashboard.deleteTag') }}
-          </button>
-        </div>
-        <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
-        <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>
-
-        <div class="content-section">
-          <div class="record-section-heading">
-            <div>
-              <h2 class="section-title">{{ t('dashboard.messagesTitle') }}</h2>
-              <p class="muted-text">
-                {{ t('dashboard.paginationSummary', { total: messagePagination.total, page: messagePagination.page, totalPages: messagePagination.totalPages }) }}
-              </p>
+        <div class="surface-card">
+          <div class="tag-detail-heading">
+            <div v-if="currentTag.profile?.photoUrl" class="tag-detail-photo">
+              <img :src="currentTag.profile.photoUrl" :alt="currentTag.profile.displayName || currentTag.uid" />
             </div>
-            <div class="pill-row filter-row compact-filter-row">
-              <button
-                v-for="status in messageDeliveryStatusOptions"
-                :key="status"
-                class="pill filter-pill"
-                :class="{ 'is-active': selectedMessageDeliveryStatus === status }"
-                type="button"
-                @click="setMessageDeliveryStatus(status)"
-              >
-                {{ deliveryStatusLabel(status) }}
+            <div>
+              <h1 class="section-title">{{ currentTag.profile?.displayName || currentTag.uid }}</h1>
+            </div>
+            <span class="status-chip" :class="`status-${currentTag.status.toLowerCase()}`">{{ currentTag.status }}</span>
+          </div>
+
+          <div class="summary-grid" style="margin-top: 18px;">
+            <div class="meta-box">
+              <strong>{{ t('dashboard.uid') }}</strong>
+              <p class="muted-text">{{ currentTag.uid }}</p>
+            </div>
+            <div class="meta-box">
+              <strong>{{ t('dashboard.updatedAt') }}</strong>
+              <p class="muted-text">{{ currentTag.updatedAt }}</p>
+            </div>
+          </div>
+
+          <div class="inline-actions" style="margin-top: 18px;">
+            <NuxtLink class="solid-button" :to="localePath(`/tags/${currentTag.uid}/edit`)">
+              {{ t('dashboard.editProfile') }}
+            </NuxtLink>
+            <NuxtLink class="outline-button" :to="`${localePath(`/t/${currentTag.uid}`)}?preview=1`">
+              {{ t('dashboard.previewFinder') }}
+            </NuxtLink>
+            <button
+              v-if="currentTag.status !== 'LOST'"
+              class="outline-button danger-action"
+              type="button"
+              :disabled="isLoading"
+              @click="openStatusConfirm('LOST')"
+            >
+              {{ t('dashboard.enableLost') }}
+            </button>
+            <button
+              v-else
+              class="outline-button"
+              type="button"
+              :disabled="isLoading"
+              @click="openStatusConfirm('ACTIVE')"
+            >
+              {{ t('dashboard.disableLost') }}
+            </button>
+            <button
+              class="outline-button danger-action"
+              type="button"
+              :disabled="isLoading"
+              @click="openDeleteConfirm"
+            >
+              {{ t('dashboard.deleteTag') }}
+            </button>
+          </div>
+          <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
+          <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>
+
+          <div class="content-section">
+            <div class="record-section-heading">
+              <div>
+                <h2 class="section-title">{{ t('dashboard.messagesTitle') }}</h2>
+                <p class="muted-text">
+                  {{ t('dashboard.paginationSummary', { total: messagePagination.total, page: messagePagination.page, totalPages: messagePagination.totalPages }) }}
+                </p>
+              </div>
+              <div class="pill-row filter-row compact-filter-row">
+                <button
+                  v-for="status in messageDeliveryStatusOptions"
+                  :key="status"
+                  class="pill filter-pill"
+                  :class="{ 'is-active': selectedMessageDeliveryStatus === status }"
+                  type="button"
+                  @click="setMessageDeliveryStatus(status)"
+                >
+                  {{ deliveryStatusLabel(status) }}
+                </button>
+              </div>
+            </div>
+            <div v-if="!messages.length" class="state-card compact-state">
+              <p class="section-copy">{{ t('dashboard.emptyMessages') }}</p>
+            </div>
+            <div v-else class="card-grid">
+              <article v-for="message in messages" :key="message.id" class="state-card owner-message-card">
+                <div class="message-card-header">
+                  <strong>{{ message.finderName || t('dashboard.anonymousFinder') }}</strong>
+                  <span class="status-chip">{{ deliveryStatusLabel(message.deliveryStatus) }}</span>
+                </div>
+                <p class="muted-text">{{ message.createdAt }}</p>
+                <p class="owner-message-body">{{ message.message }}</p>
+                <p v-if="message.finderContact" class="muted-text">
+                  {{ t('dashboard.finderContact') }}: {{ message.finderContact }}
+                </p>
+              </article>
+            </div>
+            <div v-if="messagePagination.totalPages > 1" class="pagination-row">
+              <button class="outline-button" type="button" :disabled="messagePagination.page <= 1" @click="loadMessageRecords(messagePagination.page - 1)">
+                {{ t('dashboard.prevPage') }}
+              </button>
+              <span class="muted-text">{{ messagePagination.page }} / {{ messagePagination.totalPages }}</span>
+              <button class="outline-button" type="button" :disabled="messagePagination.page >= messagePagination.totalPages" @click="loadMessageRecords(messagePagination.page + 1)">
+                {{ t('dashboard.nextPage') }}
               </button>
             </div>
           </div>
-          <div v-if="!messages.length" class="state-card compact-state">
-            <p class="section-copy">{{ t('dashboard.emptyMessages') }}</p>
-          </div>
-          <div v-else class="card-grid">
-            <article v-for="message in messages" :key="message.id" class="state-card owner-message-card">
-              <div class="message-card-header">
-                <strong>{{ message.finderName || t('dashboard.anonymousFinder') }}</strong>
-                <span class="status-chip">{{ deliveryStatusLabel(message.deliveryStatus) }}</span>
-              </div>
-              <p class="muted-text">{{ message.createdAt }}</p>
-              <p class="owner-message-body">{{ message.message }}</p>
-              <p v-if="message.finderContact" class="muted-text">
-                {{ t('dashboard.finderContact') }}: {{ message.finderContact }}
-              </p>
-            </article>
-          </div>
-          <div v-if="messagePagination.totalPages > 1" class="pagination-row">
-            <button class="outline-button" type="button" :disabled="messagePagination.page <= 1" @click="loadMessageRecords(messagePagination.page - 1)">
-              {{ t('dashboard.prevPage') }}
-            </button>
-            <span class="muted-text">{{ messagePagination.page }} / {{ messagePagination.totalPages }}</span>
-            <button class="outline-button" type="button" :disabled="messagePagination.page >= messagePagination.totalPages" @click="loadMessageRecords(messagePagination.page + 1)">
-              {{ t('dashboard.nextPage') }}
-            </button>
-          </div>
-        </div>
 
-        <div class="content-section">
-          <div class="record-section-heading">
-            <div>
-              <h2 class="section-title">{{ t('dashboard.scansTitle') }}</h2>
-              <p class="muted-text">
-                {{ t('dashboard.paginationSummary', { total: scanPagination.total, page: scanPagination.page, totalPages: scanPagination.totalPages }) }}
-              </p>
-            </div>
-            <div class="stacked-filter-group">
-              <div class="pill-row filter-row compact-filter-row">
-                <button
-                  v-for="source in scanLocationSourceOptions"
-                  :key="source"
-                  class="pill filter-pill"
-                  :class="{ 'is-active': selectedScanLocationSource === source }"
-                  type="button"
-                  @click="setScanLocationSource(source)"
-                >
-                  {{ locationSourceLabel(source) }}
-                </button>
+          <div class="content-section">
+            <div class="record-section-heading">
+              <div>
+                <h2 class="section-title">{{ t('dashboard.scansTitle') }}</h2>
+                <p class="muted-text">
+                  {{ t('dashboard.paginationSummary', { total: scanPagination.total, page: scanPagination.page, totalPages: scanPagination.totalPages }) }}
+                </p>
               </div>
-              <div class="pill-row filter-row compact-filter-row">
-                <button
-                  v-for="status in scanNotificationStatusOptions"
-                  :key="status"
-                  class="pill filter-pill"
-                  :class="{ 'is-active': selectedScanNotificationStatus === status }"
-                  type="button"
-                  @click="setScanNotificationStatus(status)"
-                >
-                  {{ notificationStatusLabel(status) }}
-                </button>
+              <div class="stacked-filter-group">
+                <div class="pill-row filter-row compact-filter-row">
+                  <button
+                    v-for="source in scanLocationSourceOptions"
+                    :key="source"
+                    class="pill filter-pill"
+                    :class="{ 'is-active': selectedScanLocationSource === source }"
+                    type="button"
+                    @click="setScanLocationSource(source)"
+                  >
+                    {{ locationSourceLabel(source) }}
+                  </button>
+                </div>
+                <div class="pill-row filter-row compact-filter-row">
+                  <button
+                    v-for="status in scanNotificationStatusOptions"
+                    :key="status"
+                    class="pill filter-pill"
+                    :class="{ 'is-active': selectedScanNotificationStatus === status }"
+                    type="button"
+                    @click="setScanNotificationStatus(status)"
+                  >
+                    {{ notificationStatusLabel(status) }}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-          <div v-if="!scans.length" class="state-card compact-state">
-            <p class="section-copy">{{ t('dashboard.emptyScans') }}</p>
-          </div>
-          <div v-else class="card-grid">
-            <article v-for="scan in scans" :key="scan.id" class="state-card">
-              <strong>{{ scan.scannedAt }}</strong>
-              <p class="muted-text">{{ scan.city || t('common.unknown') }} / {{ scan.locationSource }}</p>
-              <p class="muted-text">
-                {{ notificationStatusLabel(scan.notificationStatus) }}
-              </p>
-              <a v-if="scan.mapUrl" class="text-link" :href="scan.mapUrl" target="_blank" rel="noopener">
-                {{ t('dashboard.openScanMap') }}
-              </a>
-            </article>
-          </div>
-          <div v-if="scanPagination.totalPages > 1" class="pagination-row">
-            <button class="outline-button" type="button" :disabled="scanPagination.page <= 1" @click="loadScanRecords(scanPagination.page - 1)">
-              {{ t('dashboard.prevPage') }}
-            </button>
-            <span class="muted-text">{{ scanPagination.page }} / {{ scanPagination.totalPages }}</span>
-            <button class="outline-button" type="button" :disabled="scanPagination.page >= scanPagination.totalPages" @click="loadScanRecords(scanPagination.page + 1)">
-              {{ t('dashboard.nextPage') }}
-            </button>
+            <div v-if="!scans.length" class="state-card compact-state">
+              <p class="section-copy">{{ t('dashboard.emptyScans') }}</p>
+            </div>
+            <div v-else class="card-grid">
+              <article v-for="scan in scans" :key="scan.id" class="state-card">
+                <strong>{{ scan.scannedAt }}</strong>
+                <p class="muted-text">{{ scan.city || t('common.unknown') }} / {{ scan.locationSource }}</p>
+                <p class="muted-text">
+                  {{ notificationStatusLabel(scan.notificationStatus) }}
+                </p>
+                <a v-if="scan.mapUrl" class="text-link" :href="scan.mapUrl" target="_blank" rel="noopener">
+                  {{ t('dashboard.openScanMap') }}
+                </a>
+              </article>
+            </div>
+            <div v-if="scanPagination.totalPages > 1" class="pagination-row">
+              <button class="outline-button" type="button" :disabled="scanPagination.page <= 1" @click="loadScanRecords(scanPagination.page - 1)">
+                {{ t('dashboard.prevPage') }}
+              </button>
+              <span class="muted-text">{{ scanPagination.page }} / {{ scanPagination.totalPages }}</span>
+              <button class="outline-button" type="button" :disabled="scanPagination.page >= scanPagination.totalPages" @click="loadScanRecords(scanPagination.page + 1)">
+                {{ t('dashboard.nextPage') }}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </template>
     </section>
 
     <div v-if="pendingStatus" class="modal-backdrop" role="presentation" @click.self="closeStatusConfirm">

@@ -41,6 +41,10 @@ async function submitLogin() {
 useHead({
   title: t('auth.loginTitle')
 })
+
+definePageMeta({
+  layout: 'minimal'
+})
 </script>
 
 <template>

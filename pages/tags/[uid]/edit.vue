@@ -287,126 +287,133 @@ useHead({
         <h1 class="section-title">{{ t('finder.notFoundTitle') }}</h1>
       </div>
 
-      <div v-else class="form-card">
-        <span class="eyebrow">{{ t('tag.editEyebrow') }}</span>
-        <h1 class="section-title">{{ t('tag.editTitle') }}</h1>
-        <form @submit.prevent="saveAndGoDetail">
-          <div class="profile-photo-editor">
-            <div class="profile-photo-preview">
-              <img v-if="form.photoUrl" :src="form.photoUrl" :alt="form.displayName || t('tag.photo')" />
-              <span v-else>{{ t('tag.photoPlaceholder') }}</span>
+      <template v-else>
+        <MobilePageHeader
+          :back-to="localePath(`/dashboard/tags/${currentTag.uid}`)"
+          :back-label="t('tag.backToDetail')"
+          :eyebrow="t('tag.editEyebrow')"
+          :title="t('tag.editTitle')"
+        />
+
+        <div class="form-card">
+          <form @submit.prevent="saveAndGoDetail">
+            <div class="profile-photo-editor">
+              <div class="profile-photo-preview">
+                <img v-if="form.photoUrl" :src="form.photoUrl" :alt="form.displayName || t('tag.photo')" />
+                <span v-else>{{ t('tag.photoPlaceholder') }}</span>
+              </div>
+              <div class="profile-photo-controls">
+                <label class="outline-button profile-upload-button">
+                  {{ t('tag.uploadPhoto') }}
+                  <input type="file" accept="image/jpeg,image/png,image/webp" @change="uploadImage" />
+                </label>
+                <button
+                  v-if="form.photoUrl"
+                  class="outline-button"
+                  type="button"
+                  :disabled="isLoading"
+                  @click="form.photoUrl = ''"
+                >
+                  {{ t('tag.removePhoto') }}
+                </button>
+                <p class="muted-text">{{ t('tag.photoHint') }}</p>
+              </div>
             </div>
-            <div class="profile-photo-controls">
-              <label class="outline-button profile-upload-button">
-                {{ t('tag.uploadPhoto') }}
-                <input type="file" accept="image/jpeg,image/png,image/webp" @change="uploadImage" />
+
+            <div class="form-grid two-columns">
+              <label class="field-label">
+                {{ t('tag.category') }}
+                <select v-model="form.category">
+                  <option value="PET">PET</option>
+                  <option value="ITEM">ITEM</option>
+                </select>
               </label>
-              <button
-                v-if="form.photoUrl"
-                class="outline-button"
-                type="button"
-                :disabled="isLoading"
-                @click="form.photoUrl = ''"
-              >
-                {{ t('tag.removePhoto') }}
-              </button>
-              <p class="muted-text">{{ t('tag.photoHint') }}</p>
+              <label v-if="form.category === 'PET'" class="field-label">
+                {{ t('tag.petKind') }}
+                <select v-model="form.petKind">
+                  <option value="DOG">DOG</option>
+                  <option value="CAT">CAT</option>
+                  <option value="OTHER">OTHER</option>
+                </select>
+              </label>
+              <label class="field-label">
+                {{ t('tag.displayName') }}
+                <input v-model="form.displayName" type="text" required />
+              </label>
+              <label class="field-label">
+                {{ t('tag.customLabel') }}
+                <input v-model="form.customLabel" type="text" />
+              </label>
+              <label class="field-label">
+                {{ t('tag.breed') }}
+                <input v-model="form.breed" type="text" />
+              </label>
+              <label v-if="form.category === 'PET'" class="field-label">
+                {{ t('tag.sex') }}
+                <select v-model="form.sex">
+                  <option value="UNKNOWN">UNKNOWN</option>
+                  <option value="MALE">MALE</option>
+                  <option value="FEMALE">FEMALE</option>
+                </select>
+              </label>
+              <label class="field-label">
+                {{ t('tag.ownerPhone') }}
+                <input v-model="form.ownerPhone" type="text" />
+              </label>
+              <label class="field-label">
+                {{ t('tag.backupPhone') }}
+                <input v-model="form.backupPhone" type="text" />
+              </label>
+              <label class="field-label">
+                {{ t('tag.notificationEmail') }}
+                <input v-model="form.notificationEmail" type="email" />
+              </label>
+              <label class="field-label">
+                {{ t('tag.homeAddress') }}
+                <input v-model="form.homeAddress" type="text" />
+              </label>
             </div>
-          </div>
 
-          <div class="form-grid two-columns">
-            <label class="field-label">
-              {{ t('tag.category') }}
-              <select v-model="form.category">
-                <option value="PET">PET</option>
-                <option value="ITEM">ITEM</option>
-              </select>
-            </label>
-            <label v-if="form.category === 'PET'" class="field-label">
-              {{ t('tag.petKind') }}
-              <select v-model="form.petKind">
-                <option value="DOG">DOG</option>
-                <option value="CAT">CAT</option>
-                <option value="OTHER">OTHER</option>
-              </select>
-            </label>
-            <label class="field-label">
-              {{ t('tag.displayName') }}
-              <input v-model="form.displayName" type="text" required />
-            </label>
-            <label class="field-label">
-              {{ t('tag.customLabel') }}
-              <input v-model="form.customLabel" type="text" />
-            </label>
-            <label class="field-label">
-              {{ t('tag.breed') }}
-              <input v-model="form.breed" type="text" />
-            </label>
-            <label v-if="form.category === 'PET'" class="field-label">
-              {{ t('tag.sex') }}
-              <select v-model="form.sex">
-                <option value="UNKNOWN">UNKNOWN</option>
-                <option value="MALE">MALE</option>
-                <option value="FEMALE">FEMALE</option>
-              </select>
-            </label>
-            <label class="field-label">
-              {{ t('tag.ownerPhone') }}
-              <input v-model="form.ownerPhone" type="text" />
-            </label>
-            <label class="field-label">
-              {{ t('tag.backupPhone') }}
-              <input v-model="form.backupPhone" type="text" />
-            </label>
-            <label class="field-label">
-              {{ t('tag.notificationEmail') }}
-              <input v-model="form.notificationEmail" type="email" />
-            </label>
-            <label class="field-label">
-              {{ t('tag.homeAddress') }}
-              <input v-model="form.homeAddress" type="text" />
-            </label>
-          </div>
+            <div class="toggle-grid">
+              <label class="toggle-row">
+                <input v-model="form.privacyMode" type="checkbox" />
+                <span>{{ t('tag.privacyMode') }}</span>
+              </label>
+              <label v-if="form.category === 'PET'" class="toggle-row">
+                <input v-model="form.isNeutered" type="checkbox" />
+                <span>{{ t('tag.isNeutered') }}</span>
+              </label>
+              <label class="toggle-row">
+                <input v-model="form.hasMicrochip" type="checkbox" />
+                <span>{{ t('tag.hasMicrochip') }}</span>
+              </label>
+              <label class="toggle-row">
+                <input v-model="form.showHomeAddress" type="checkbox" />
+                <span>{{ t('tag.showHomeAddress') }}</span>
+              </label>
+            </div>
 
-          <div class="toggle-grid">
-            <label class="toggle-row">
-              <input v-model="form.privacyMode" type="checkbox" />
-              <span>{{ t('tag.privacyMode') }}</span>
+            <label v-if="form.hasMicrochip" class="field-label">
+              {{ t('tag.microchipCode') }}
+              <input v-model="form.microchipCode" type="text" />
             </label>
-            <label v-if="form.category === 'PET'" class="toggle-row">
-              <input v-model="form.isNeutered" type="checkbox" />
-              <span>{{ t('tag.isNeutered') }}</span>
+            <label class="field-label">
+              {{ t('tag.medicalNote') }}
+              <textarea v-model="form.medicalNote" />
             </label>
-            <label class="toggle-row">
-              <input v-model="form.hasMicrochip" type="checkbox" />
-              <span>{{ t('tag.hasMicrochip') }}</span>
-            </label>
-            <label class="toggle-row">
-              <input v-model="form.showHomeAddress" type="checkbox" />
-              <span>{{ t('tag.showHomeAddress') }}</span>
-            </label>
-          </div>
-
-          <label v-if="form.hasMicrochip" class="field-label">
-            {{ t('tag.microchipCode') }}
-            <input v-model="form.microchipCode" type="text" />
-          </label>
-          <label class="field-label">
-            {{ t('tag.medicalNote') }}
-            <textarea v-model="form.medicalNote" />
-          </label>
-          <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
-          <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>
-          <div class="inline-actions">
-            <button class="outline-button" type="button" :disabled="isLoading" @click="saveProfile">
-              {{ t('common.saveDraft') }}
-            </button>
-            <button class="solid-button" type="submit" :disabled="isLoading">
-              {{ isLoading ? t('common.submitting') : t('tag.saveAndBack') }}
-            </button>
-          </div>
-        </form>
-      </div>
+            <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
+            <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>
+            <div class="inline-actions">
+              <button class="outline-button" type="button" :disabled="isLoading" @click="saveProfile">
+                {{ t('common.saveDraft') }}
+              </button>
+              <button class="solid-button" type="submit" :disabled="isLoading">
+                {{ isLoading ? t('common.submitting') : t('tag.saveAndBack') }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </template>
     </section>
 
     <div v-if="isCropModalOpen" class="modal-backdrop" role="presentation" @click.self="closeCropModal">

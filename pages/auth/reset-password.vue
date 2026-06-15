@@ -52,6 +52,10 @@ watch(
 useHead({
   title: t('auth.resetTitle')
 })
+
+definePageMeta({
+  layout: 'minimal'
+})
 </script>
 
 <template>
