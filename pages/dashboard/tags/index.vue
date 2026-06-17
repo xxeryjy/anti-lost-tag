@@ -1,20 +1,46 @@
 <script setup lang="ts">
+import logoImage from '~/assets/images/logo.png'
 import type { TagRecord, TagStatus } from '~/types/smarttag'
 
-const { t } = useI18n()
+const { t, locale, locales } = useI18n()
 const localePath = useLocalePath()
+const switchLocalePath = useSwitchLocalePath()
 const { run, isLoading, errorMessage, successMessage, setSuccess } = useApiRequest()
 const { tags, isLoadingTags, loadError, loadMyTags } = useOwnerTags()
-const statusOptions = ['ALL', 'ACTIVE', 'LOST', 'INACTIVE'] as const
-const selectedStatus = ref<'ALL' | 'ACTIVE' | 'LOST' | 'INACTIVE'>('ALL')
+const isNavDocked = ref(false)
 
-const filteredTags = computed(() => {
-  if (selectedStatus.value === 'ALL') {
-    return tags.value
+const localeItems = computed(() =>
+  locales.value.map((item) => {
+    const code = typeof item === 'string' ? item : item.code
+    const name = typeof item === 'string' ? item : item.name || item.code
+
+    return {
+      code,
+      name,
+      path: switchLocalePath(code)
+    }
+  })
+)
+
+const visibleTags = computed(() => tags.value)
+
+const currentNavLogo = computed(() => logoImage)
+
+const currentLocaleShortLabel = computed(() => {
+  if (locale.value.startsWith('zh')) {
+    return '中'
   }
 
-  return tags.value.filter((tag) => tag.status === selectedStatus.value)
+  if (locale.value.startsWith('ja')) {
+    return '日'
+  }
+
+  return '英'
 })
+
+function updateNavDockedState() {
+  isNavDocked.value = window.scrollY > 72
+}
 
 function getTagDisplayName(tag: TagRecord) {
   return tag.profile?.displayName || tag.uid
@@ -70,6 +96,18 @@ function getStatusActionLabel(status: TagStatus) {
     : t('dashboard.markAsLost')
 }
 
+function getStatusDisplayLabel(status: TagStatus) {
+  if (status === 'LOST') {
+    return t('dashboard.statusLost')
+  }
+
+  if (status === 'INACTIVE') {
+    return t('dashboard.statusInactive')
+  }
+
+  return t('dashboard.statusActive')
+}
+
 async function toggleTagStatus(tag: TagRecord) {
   const nextStatus: TagStatus = tag.status === 'LOST' ? 'ACTIVE' : 'LOST'
 
@@ -87,7 +125,13 @@ async function toggleTagStatus(tag: TagRecord) {
 }
 
 onMounted(() => {
+  updateNavDockedState()
+  window.addEventListener('scroll', updateNavDockedState, { passive: true })
   loadMyTags()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', updateNavDockedState)
 })
 
 useHead({
@@ -96,25 +140,45 @@ useHead({
 </script>
 
 <template>
-  <div class="page-container owner-tags-page">
+  <div class="page-container owner-tags-page home-page-redesign">
     <section class="content-section owner-tags-section">
+            <header class="home-nav owner-tags-home-nav-shell" :class="{ 'is-docked': isNavDocked }">
+        <div class="page-frame home-nav-inner owner-tags-home-nav-inner">
+          <div class="owner-tags-nav-main">
+            <NuxtLink :to="localePath('/')" class="brand-mark home-brand owner-tags-home-brand">
+              <img :src="currentNavLogo" :alt="t('brand.logoAlt')" class="home-brand-logo">
+            </NuxtLink>
+
+            <NuxtLink :to="localePath('/dashboard/tags')" class="owner-tags-dashboard-link">
+              {{ t('dashboard.consoleLabel') }}
+            </NuxtLink>
+          </div>
+
+          <div class="home-nav-tools owner-tags-home-nav-tools">
+            <details class="home-locale-switcher">
+              <summary class="home-locale-trigger">
+                <span>{{ currentLocaleShortLabel }}</span>
+              </summary>
+              <div class="home-locale-menu">
+                <NuxtLink
+                  v-for="item in localeItems"
+                  :key="item.code"
+                  class="home-locale-item"
+                  :class="{ 'is-active': item.code === locale }"
+                  :to="item.path"
+                >
+                  {{ item.name }}
+                </NuxtLink>
+              </div>
+            </details>
+          </div>
+        </div>
+      </header>
+
       <div class="surface-card owner-tags-panel">
         <div class="owner-tags-header">
           <span class="eyebrow owner-tags-eyebrow">{{ t('dashboard.tagsEyebrow') }}</span>
           <h1 class="section-title owner-tags-title">{{ t('dashboard.tagsTitle') }}</h1>
-        </div>
-
-        <div class="pill-row filter-row owner-tags-filters">
-          <button
-            v-for="status in statusOptions"
-            :key="status"
-            class="pill filter-pill owner-tags-filter-pill"
-            :class="{ 'is-active': selectedStatus === status }"
-            type="button"
-            @click="selectedStatus = status"
-          >
-            {{ status === 'ALL' ? t('dashboard.allTags') : status }}
-          </button>
         </div>
 
         <p v-if="errorMessage" class="alert-box alert-error owner-tags-feedback">{{ errorMessage }}</p>
@@ -128,13 +192,13 @@ useHead({
           <p class="section-copy">{{ loadError }}</p>
         </div>
 
-        <div v-else-if="!filteredTags.length" class="state-card compact-state owner-tags-state">
+        <div v-else-if="!visibleTags.length" class="state-card compact-state owner-tags-state">
           <p class="section-copy">{{ t('dashboard.emptyTags') }}</p>
         </div>
 
         <div v-else class="card-grid owner-tags-grid">
           <article
-            v-for="tag in filteredTags"
+            v-for="tag in visibleTags"
             :key="tag.uid"
             class="state-card owner-tag-card"
           >
@@ -171,7 +235,7 @@ useHead({
             <div class="owner-tag-mode-row">
               <div class="owner-tag-mode-copy">
                 <span class="owner-tag-mode-label">{{ t('dashboard.modeLabel') }}</span>
-                <span class="owner-tag-mode-value" :class="`is-${tag.status.toLowerCase()}`">{{ tag.status }}</span>
+                <span class="owner-tag-mode-value" :class="`is-${tag.status.toLowerCase()}`">{{ getStatusDisplayLabel(tag.status) }}</span>
               </div>
               <button
                 class="owner-tag-mode-action"
@@ -221,14 +285,79 @@ useHead({
 
 .owner-tags-title {
   margin-top: 12px;
+  color: #27352f;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
 }
 
-.owner-tags-filters {
-  margin: 0 0 20px;
+.owner-tags-home-nav-shell {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  margin-bottom: 18px;
+  padding-top: 0;
 }
 
-.owner-tags-filter-pill {
-  min-width: 88px;
+.owner-tags-home-nav-inner {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.owner-tags-nav-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.owner-tags-home-brand {
+  color: var(--brand-deep);
+  flex-shrink: 0;
+}
+
+.owner-tags-home-nav-tools {
+  margin-left: auto;
+}
+
+.owner-tags-dashboard-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(66, 52, 41, 0.06);
+  color: var(--brand-deep);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.owner-tags-home-nav-shell.is-docked .owner-tags-dashboard-link {
+  color: var(--brand-deep);
+  background: rgba(66, 52, 41, 0.06);
+}
+
+.owner-tags-home-nav-shell :deep(.home-locale-trigger) {
+  color: var(--brand-deep);
+  background: rgba(66, 52, 41, 0.06);
+  border-color: rgba(66, 52, 41, 0.12);
+}
+
+.owner-tags-home-nav-shell.is-docked :deep(.home-locale-trigger) {
+  color: var(--brand-deep);
+  background: rgba(66, 52, 41, 0.06);
+  border-color: rgba(66, 52, 41, 0.12);
+}
+
+
+.owner-tags-home-nav-shell :deep(.home-locale-menu) {
+  z-index: 1;
+}
+
+.owner-tags-eyebrow {
+  letter-spacing: 0.01em;
 }
 
 .owner-tags-feedback {
@@ -308,7 +437,9 @@ useHead({
   overflow: hidden;
   min-width: 0;
   font-size: 24px;
-  line-height: 1.15;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
@@ -321,14 +452,16 @@ useHead({
 
 .owner-tag-meta {
   margin-top: 6px;
+  color: #66736d;
   font-size: 14px;
+  line-height: 1.5;
 }
 
 .owner-tag-id {
   margin-top: 6px;
   color: #8d93b0;
   font-size: 14px;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .owner-tag-settings {
@@ -368,7 +501,9 @@ useHead({
 }
 
 .owner-tag-mode-label {
-  color: var(--brand-deep);
+  color: #5f6d67;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .owner-tag-mode-value {
@@ -436,7 +571,9 @@ useHead({
 }
 
 .owner-tag-alert-title {
+  font-size: 13px;
   font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .owner-tag-alert-copy {
@@ -456,7 +593,7 @@ useHead({
   color: var(--brand-deep);
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
 
 .owner-tag-reward {
@@ -502,11 +639,12 @@ useHead({
   }
 
   .owner-tags-section {
+    width: 100%;
     margin-top: 12px;
   }
 
   .owner-tags-panel {
-    padding: 18px;
+    padding: 16px 14px;
     border-radius: 26px;
   }
 
@@ -522,20 +660,7 @@ useHead({
   .owner-tags-title {
     margin-top: 10px;
     margin-bottom: 0;
-    font-size: clamp(24px, 8.2vw, 34px);
-  }
-
-  .owner-tags-filters {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    margin-bottom: 18px;
-  }
-
-  .owner-tags-filter-pill {
-    width: 100%;
-    min-width: 0;
-    min-height: 40px;
+    font-size: clamp(22px, 7.6vw, 30px);
   }
 
   .owner-tags-state {
@@ -544,7 +669,7 @@ useHead({
 
   .owner-tag-card {
     gap: 14px;
-    padding: 16px;
+    padding: 14px;
     border-radius: 24px;
   }
 
@@ -562,7 +687,8 @@ useHead({
   }
 
   .owner-tag-name {
-    font-size: 18px;
+    font-size: 17px;
+    line-height: 1.24;
   }
 
   .owner-tag-meta,
@@ -570,7 +696,8 @@ useHead({
   .owner-tag-alert-copy,
   .owner-tag-reward,
   .owner-tag-links {
-    font-size: 13px;
+    font-size: 12.5px;
+    line-height: 1.5;
   }
 
   .owner-tag-settings {
@@ -585,13 +712,14 @@ useHead({
 
   .owner-tag-mode-copy {
     gap: 6px;
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .owner-tag-mode-action {
     min-height: 36px;
     padding: 0 14px;
-    font-size: 13px;
+    font-size: 12px;
+    font-weight: 700;
   }
 
   .owner-tag-alert,
@@ -601,6 +729,36 @@ useHead({
 
   .owner-tag-links {
     gap: 10px;
+  }
+
+  .owner-tags-home-nav-inner {
+    width: 100%;
+    margin-inline: 0;
+    padding-inline: 12px;
+  }
+
+  .owner-tags-home-nav-shell {
+    width: 100%;
+    margin-inline: 0;
+  }
+
+  .owner-tags-home-nav-inner {
+    gap: 10px;
+  }
+
+  .owner-tags-nav-main {
+    gap: 8px;
+  }
+
+  .owner-tags-home-nav-shell :deep(.home-locale-switcher) {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  .owner-tags-dashboard-link {
+    min-height: 34px;
+    padding-inline: 10px;
+    font-size: 11px;
   }
 }
 </style>

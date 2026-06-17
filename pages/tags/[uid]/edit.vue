@@ -248,11 +248,8 @@ async function confirmCroppedPhoto() {
   }
 }
 
-async function saveAndGoDetail() {
-  await saveProfile()
-  if (!errorMessage.value && currentTag.value) {
-    await navigateTo(localePath(`/dashboard/tags/${currentTag.value.uid}`))
-  }
+async function goBackToTags() {
+  await navigateTo(localePath('/dashboard/tags'))
 }
 
 onMounted(async () => {
@@ -272,7 +269,7 @@ useHead({
 </script>
 
 <template>
-  <div class="page-container">
+  <div class="page-container profile-edit-page">
     <section class="content-section">
       <div v-if="isLoadingTags" class="state-card">
         <h1 class="section-title">{{ t('common.loading') }}</h1>
@@ -289,35 +286,56 @@ useHead({
 
       <template v-else>
         <MobilePageHeader
-          :back-to="localePath(`/dashboard/tags/${currentTag.uid}`)"
-          :back-label="t('tag.backToDetail')"
+          :back-to="localePath('/dashboard/tags')"
+          :back-label="t('tag.backToTags')"
           :eyebrow="t('tag.editEyebrow')"
           :title="t('tag.editTitle')"
         />
 
-        <div class="form-card">
-          <form @submit.prevent="saveAndGoDetail">
+        <div class="form-card profile-edit-card">
+          <form @submit.prevent="saveProfile">
+            <div class="profile-edit-intro">
+              <p class="muted-text">{{ t('tag.editIntro') }}</p>
+            </div>
+
             <div class="profile-photo-editor">
-              <div class="profile-photo-preview">
-                <img v-if="form.photoUrl" :src="form.photoUrl" :alt="form.displayName || t('tag.photo')" />
-                <span v-else>{{ t('tag.photoPlaceholder') }}</span>
-              </div>
-              <div class="profile-photo-controls">
-                <label class="outline-button profile-upload-button">
-                  {{ t('tag.uploadPhoto') }}
+              <div class="profile-photo-stage">
+                <label class="profile-photo-avatar profile-upload-button">
+                  <div class="profile-photo-preview">
+                    <img v-if="form.photoUrl" :src="form.photoUrl" :alt="form.displayName || t('tag.photo')" />
+                    <span v-else>{{ t('tag.photoPlaceholder') }}</span>
+                  </div>
+                  <span class="profile-photo-badge" aria-hidden="true">+</span>
                   <input type="file" accept="image/jpeg,image/png,image/webp" @change="uploadImage" />
                 </label>
-                <button
-                  v-if="form.photoUrl"
-                  class="outline-button"
-                  type="button"
-                  :disabled="isLoading"
-                  @click="form.photoUrl = ''"
-                >
-                  {{ t('tag.removePhoto') }}
-                </button>
-                <p class="muted-text">{{ t('tag.photoHint') }}</p>
+                <p class="profile-photo-caption">{{ t('tag.photoTapHint') }}</p>
               </div>
+
+              <div class="profile-photo-content">
+                <h2 class="profile-form-title">{{ t('tag.photoSectionTitle') }}</h2>
+                <p class="muted-text profile-photo-description">{{ t('tag.photoSectionDescription') }}</p>
+
+                <div class="profile-photo-actions">
+                  <label class="outline-button profile-upload-button">
+                    {{ form.photoUrl ? t('tag.changePhoto') : t('tag.uploadPhoto') }}
+                    <input type="file" accept="image/jpeg,image/png,image/webp" @change="uploadImage" />
+                  </label>
+                  <button
+                    v-if="form.photoUrl"
+                    class="outline-button"
+                    type="button"
+                    :disabled="isLoading"
+                    @click="form.photoUrl = ''"
+                  >
+                    {{ t('tag.removePhoto') }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="profile-form-intro">
+              <h2 class="profile-form-title">{{ t('tag.detailsSectionTitle') }}</h2>
+              <p class="muted-text">{{ t('tag.detailsSectionDescription') }}</p>
             </div>
 
             <div class="form-grid two-columns">
@@ -403,12 +421,12 @@ useHead({
             </label>
             <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
             <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>
-            <div class="inline-actions">
-              <button class="outline-button" type="button" :disabled="isLoading" @click="saveProfile">
-                {{ t('common.saveDraft') }}
-              </button>
+            <div class="inline-actions profile-edit-actions">
               <button class="solid-button" type="submit" :disabled="isLoading">
                 {{ isLoading ? t('common.submitting') : t('tag.saveAndBack') }}
+              </button>
+              <button class="outline-button" type="button" :disabled="isLoading" @click="goBackToTags">
+                {{ t('tag.backToTags') }}
               </button>
             </div>
           </form>
@@ -462,3 +480,135 @@ useHead({
     </div>
   </div>
 </template>
+
+<style scoped>
+.profile-edit-card {
+  padding: 24px;
+}
+
+.profile-edit-page :deep(.profile-edit-intro),
+.profile-edit-page :deep(.profile-form-intro) {
+  gap: 6px;
+}
+
+.profile-edit-page :deep(.profile-edit-intro .muted-text),
+.profile-edit-page :deep(.profile-form-intro .muted-text),
+.profile-edit-page :deep(.field-label) {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.profile-edit-page :deep(.profile-photo-editor) {
+  gap: 20px;
+  padding: 20px;
+}
+
+.profile-edit-page :deep(.profile-photo-content) {
+  gap: 10px;
+}
+
+.profile-edit-page :deep(.profile-photo-description) {
+  max-width: 30ch;
+}
+
+.profile-edit-page :deep(.profile-photo-actions) {
+  gap: 10px;
+}
+
+.profile-edit-page :deep(.toggle-row) {
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.profile-edit-page :deep(.toggle-row input) {
+  width: 16px;
+  height: 16px;
+}
+
+.profile-edit-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.profile-edit-actions :deep(.solid-button),
+.profile-edit-actions :deep(.outline-button),
+.profile-edit-actions .solid-button,
+.profile-edit-actions .outline-button {
+  width: 100%;
+  min-height: 42px;
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .profile-edit-page {
+    padding-bottom: 48px;
+  }
+
+  .profile-edit-page :deep(.content-section) {
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  .profile-edit-card {
+    padding: 16px 14px;
+    border-radius: 26px;
+  }
+
+  .profile-edit-page :deep(.profile-edit-intro .muted-text),
+  .profile-edit-page :deep(.profile-form-intro .muted-text),
+  .profile-edit-page :deep(.profile-photo-caption),
+  .profile-edit-page :deep(.profile-photo-description),
+  .profile-edit-page :deep(.field-label),
+  .profile-edit-page :deep(.toggle-row) {
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+
+  .profile-edit-page :deep(.profile-photo-editor) {
+    gap: 16px;
+    padding: 16px 14px;
+    border-radius: 22px;
+  }
+
+  .profile-edit-page :deep(.profile-photo-avatar) {
+    width: 132px;
+    height: 132px;
+  }
+
+  .profile-edit-page :deep(.profile-form-title) {
+    font-size: clamp(18px, 6vw, 22px);
+    line-height: 1.18;
+  }
+
+  .profile-edit-page :deep(.field-label input),
+  .profile-edit-page :deep(.field-label select),
+  .profile-edit-page :deep(.field-label textarea) {
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: 12px;
+  }
+
+  .profile-edit-page :deep(.field-label textarea) {
+    min-height: 124px;
+  }
+
+  .profile-edit-page :deep(.toggle-grid) {
+    gap: 10px;
+  }
+
+  .profile-edit-page :deep(.toggle-row) {
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+
+  .profile-edit-actions .solid-button,
+  .profile-edit-actions .outline-button {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 12px;
+  }
+}
+</style>

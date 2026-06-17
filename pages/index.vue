@@ -68,7 +68,7 @@ const currentLocaleLabel = computed(() => {
   return matched?.code.toUpperCase() || locale.value.toUpperCase()
 })
 
-const currentNavLogo = computed(() => isNavDocked.value ? logoImage : logoNavImage)
+const currentNavLogo = computed(() => logoImage)
 
 function closeMobileMenu() {
   isMobileMenuOpen.value = false
