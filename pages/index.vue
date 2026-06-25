@@ -13,6 +13,8 @@ definePageMeta({
 const localePath = useLocalePath()
 const switchLocalePath = useSwitchLocalePath()
 const { t, locale, locales } = useI18n()
+const authStore = useAuthStore()
+const requestFetch = useRequestFetch()
 
 const isMobileMenuOpen = ref(false)
 const isNavDocked = ref(false)
@@ -69,6 +71,25 @@ const currentLocaleLabel = computed(() => {
 })
 
 const currentNavLogo = computed(() => logoImage)
+const navActionLabel = computed(() => authStore.isAuthenticated ? t('dashboard.consoleLabel') : t('nav.login'))
+const navActionPath = computed(() => localePath(authStore.isAuthenticated ? '/dashboard/tags' : '/auth/login'))
+
+if (!authStore.hasCheckedSession) {
+  try {
+    const response = await requestFetch<{
+      success: true
+      data: {
+        user: {
+          email: string
+          emailVerifiedAt: string | null
+        }
+      }
+    }>('/api/auth/me')
+    authStore.applyUser(response.data.user)
+  } catch {
+    authStore.clearSession()
+  }
+}
 
 function closeMobileMenu() {
   isMobileMenuOpen.value = false
@@ -139,6 +160,14 @@ useHead(() => ({
                 </NuxtLink>
               </div>
             </details>
+
+            <NuxtLink
+              class="home-nav-cta home-nav-login"
+              :to="navActionPath"
+              @click="closeMobileMenu"
+            >
+              {{ navActionLabel }}
+            </NuxtLink>
 
             <button
               type="button"

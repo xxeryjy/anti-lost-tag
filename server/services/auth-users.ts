@@ -62,12 +62,20 @@ export async function findAuthUserById(id: number) {
   })
 }
 
-export async function createAuthUser(email: string, passwordHash: string, preferredLocale?: string) {
+export async function createAuthUser(
+  email: string,
+  passwordHash: string,
+  preferredLocale?: string,
+  options?: {
+    emailVerifiedAt?: Date | null
+  }
+) {
   return prisma.user.create({
     data: {
       email: normalizeEmail(email),
       passwordHash,
-      preferredLocale: apiToDbLocale[normalizePreferredLocale(preferredLocale)]
+      preferredLocale: apiToDbLocale[normalizePreferredLocale(preferredLocale)],
+      emailVerifiedAt: options?.emailVerifiedAt ?? null
     }
   })
 }

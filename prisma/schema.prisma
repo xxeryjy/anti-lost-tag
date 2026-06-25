@@ -89,6 +89,18 @@ model AuthCode {
   @@index([userId, purpose, consumedAt])
 }
 
+model RegisterCode {
+  id          Int       @id @default(autoincrement())
+  email       String
+  codeHash    String
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([email, expiresAt])
+  @@index([email, consumedAt])
+}
+
 model Tag {
   id                 Int        @id @default(autoincrement())
   uid                String     @unique

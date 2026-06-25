@@ -5,8 +5,8 @@ const route = useRoute()
 const authStore = useAuthStore()
 const { getAuthErrorMessage } = useAuthErrorMessage()
 const form = reactive({
-  email: typeof route.query.email === 'string' ? route.query.email : '',
-  password: ''
+  email: typeof route.query.email === 'string' ? route.query.email : '1157389582@qq.com',
+  password: '123456'
 })
 const { isLoading, errorMessage, errorCode, successMessage, run, setSuccess, setError } = useApiRequest()
 

@@ -1,12 +1,13 @@
 import { appendScan, findTagByUid } from '~/server/services/mock-data'
-import { sendScanNotificationEmail } from '~/server/services/mail'
+import { sendLocalizedScanNotificationEmail } from '~/server/services/mail'
 import { createPublicScan, getTagByUid, updateScanNotificationStatus } from '~/server/services/tags'
 import { fail, ok } from '~/server/utils/api-response'
 import { getApiDataSource } from '~/server/utils/data-source'
 import { enforceIpRateLimit, getRequestIp, readPositiveRuntimeNumber } from '~/server/utils/request'
-import type { LocationSource } from '~/types/smarttag'
+import type { LocationSource, PreferredLocale } from '~/types/smarttag'
 
 const locationSources: LocationSource[] = ['GPS', 'IP']
+const preferredLocales: PreferredLocale[] = ['zh-CN', 'en', 'ja']
 
 function readNullableNumber(value: unknown) {
   return typeof value === 'number' && Number.isFinite(value) ? value : null
@@ -38,6 +39,9 @@ export default defineEventHandler(async (event) => {
   const locationSource = typeof body.locationSource === 'string' && locationSources.includes(body.locationSource as LocationSource)
     ? body.locationSource as LocationSource
     : 'IP'
+  const preferredLocale = typeof body.locale === 'string' && preferredLocales.includes(body.locale as PreferredLocale)
+    ? body.locale as PreferredLocale
+    : 'zh-CN'
   const payload = {
     locationSource,
     latitude: readNullableNumber(body.latitude),
@@ -59,13 +63,14 @@ export default defineEventHandler(async (event) => {
   }
 
   if (dataSource === 'database' && scan.notificationStatus === 'PENDING' && tag.profile?.notificationEmail) {
-    const mailResult = await sendScanNotificationEmail(event, {
+    const mailResult = await sendLocalizedScanNotificationEmail(event, {
       to: tag.profile.notificationEmail,
       tagUid: tag.uid,
       displayName: tag.profile.displayName,
       scannedAt: scan.scannedAt,
       locationText: [scan.city, scan.region, scan.country].filter(Boolean).join(', ') || scan.locationSource,
-      mapUrl: scan.mapUrl
+      mapUrl: scan.mapUrl,
+      locale: preferredLocale
     })
     if (mailResult.sent) {
       scan = await updateScanNotificationStatus(scan.id, 'SENT')

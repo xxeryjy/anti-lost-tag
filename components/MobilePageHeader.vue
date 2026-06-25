@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang=ts>
 const props = withDefaults(defineProps<{
   backTo: string
   backLabel: string
@@ -7,75 +7,93 @@ const props = withDefaults(defineProps<{
 }>(), {
   eyebrow: ''
 })
+
+async function handleBack() {
+  await navigateTo(props.backTo)
+}
 </script>
 
 <template>
-  <div class="mobile-page-header">
-    <div class="mobile-page-header-bar">
-      <NuxtLink class="mobile-page-header-back" :to="backTo">
-        <span class="mobile-page-header-arrow" aria-hidden="true">&larr;</span>
-        <span class="mobile-page-header-sr-only">{{ backLabel }}</span>
-      </NuxtLink>
-      <p class="mobile-page-header-title">{{ title }}</p>
-      <span class="mobile-page-header-placeholder" aria-hidden="true" />
-    </div>
+  <div class=mobile-page-header>
+    <van-nav-bar
+      fixed
+      placeholder
+      safe-area-inset-top
+      left-arrow
+      :title=title
+      @click-left=handleBack
+    >
+      <template #left>
+        <span class=mobile-page-header-left :aria-label=backLabel>
+          <van-icon class=mobile-page-header-left-icon name=arrow-left size=18 aria-hidden=true />
+          <span class=mobile-page-header-left-text>{{ backLabel }}</span>
+        </span>
+      </template>
+    </van-nav-bar>
 
-    <p v-if="eyebrow" class="mobile-page-header-eyebrow">{{ eyebrow }}</p>
+    <p v-if=eyebrow class=mobile-page-header-eyebrow>{{ eyebrow }}</p>
   </div>
 </template>
 
 <style scoped>
 .mobile-page-header {
   position: sticky;
-  top: 8px;
+  top: 0;
   z-index: 30;
   margin-bottom: 16px;
 }
 
-.mobile-page-header-bar {
-  position: relative;
-  display: grid;
-  grid-template-columns: 44px 1fr 44px;
-  align-items: center;
-  min-height: 48px;
-  padding: 0 2px;
-  background: rgba(247, 246, 241, 0.92);
-  border-bottom: 1px solid rgba(36, 51, 47, 0.12);
-  backdrop-filter: blur(10px);
+.mobile-page-header :deep(.van-nav-bar) {
+  overflow: hidden;
+  background: rgba(255, 252, 246, 0.94);
+  border: 1px solid rgba(49, 95, 87, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 14px 28px rgba(49, 95, 87, 0.07);
+  backdrop-filter: blur(16px);
 }
 
-.mobile-page-header-back {
+.mobile-page-header :deep(.van-nav-bar::after) {
+  border-color: rgba(36, 51, 47, 0.08);
+}
+
+.mobile-page-header :deep(.van-nav-bar__content) {
+  padding: 0 8px;
+}
+
+.mobile-page-header :deep(.van-nav-bar__title) {
+  max-width: calc(100% - 132px);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.01em;
+}
+
+.mobile-page-header :deep(.van-nav-bar__left) {
+  min-width: 48px;
+  padding: 0 12px;
+}
+
+.mobile-page-header-left {
   display: inline-flex;
   align-items: center;
-  min-height: 32px;
-  width: 32px;
-  justify-content: center;
-  color: var(--text);
-  text-decoration: none;
+  gap: 5px;
+  min-height: 44px;
+  color: var(--brand-deep);
 }
 
-.mobile-page-header-arrow {
-  font-size: 16px;
+.mobile-page-header-left-icon {
+  color: var(--accent);
+}
+
+.mobile-page-header-left-text {
+  max-width: 104px;
+  overflow: hidden;
+  color: rgba(49, 95, 87, 0.86);
+  font-size: 12px;
+  font-weight: 600;
   line-height: 1;
-}
-
-.mobile-page-header-title {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  margin: 0;
-  color: var(--text);
-  font-size: 17px;
-  font-weight: 700;
-  line-height: 1.2;
+  letter-spacing: 0.02em;
+  text-overflow: ellipsis;
   white-space: nowrap;
-  pointer-events: none;
-}
-
-.mobile-page-header-placeholder {
-  justify-self: end;
-  width: 32px;
-  height: 1px;
 }
 
 .mobile-page-header-eyebrow {
@@ -89,34 +107,27 @@ const props = withDefaults(defineProps<{
   text-transform: uppercase;
 }
 
-.mobile-page-header-sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.mobile-page-header-back:hover {
-  color: var(--brand-deep);
-}
-
 @media (max-width: 960px) {
   .mobile-page-header {
-    top: 6px;
     margin-bottom: 12px;
   }
 
-  .mobile-page-header-bar {
-    min-height: 44px;
+  .mobile-page-header :deep(.van-nav-bar) {
+    border-radius: 18px;
   }
 
-  .mobile-page-header-title {
-    font-size: 16px;
+  .mobile-page-header-left-text {
+    max-width: 76px;
+  }
+}
+
+@media (max-width: 640px) {
+  .mobile-page-header :deep(.van-nav-bar__content) {
+    padding: 0 2px;
+  }
+
+  .mobile-page-header-left-text {
+    display: none;
   }
 }
 </style>

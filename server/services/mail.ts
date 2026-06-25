@@ -1,5 +1,7 @@
 import type { H3Event } from 'h3'
+import nodemailer from 'nodemailer'
 import { appendDevMailboxMessage } from '~/server/services/dev-mailbox'
+import type { PreferredLocale } from '~/types/smarttag'
 
 export interface MailSendResult {
   sent: boolean
@@ -21,6 +23,45 @@ interface MailMessage {
   actions?: MailAction[]
 }
 
+function normalizePreferredLocale(locale?: string | null): PreferredLocale {
+  return locale === 'en' || locale === 'ja' ? locale : 'zh-CN'
+}
+
+function buildLocalizedScanMail(locale?: string | null) {
+  const resolvedLocale = normalizePreferredLocale(locale)
+
+  if (resolvedLocale === 'en') {
+    return {
+      subjectPrefix: 'SmartTag scan alert',
+      scannedCopy: 'was just scanned.',
+      timeLabel: 'Time',
+      locationLabel: 'Location',
+      mapLabel: 'Map',
+      publicPageLabel: 'Public page'
+    }
+  }
+
+  if (resolvedLocale === 'ja') {
+    return {
+      subjectPrefix: 'SmartTag スキャン通知',
+      scannedCopy: 'がスキャンされました。',
+      timeLabel: '時刻',
+      locationLabel: '位置',
+      mapLabel: '地図',
+      publicPageLabel: '公開ページ'
+    }
+  }
+
+  return {
+    subjectPrefix: 'SmartTag 扫码提醒',
+    scannedCopy: '刚刚被扫描了。',
+    timeLabel: '时间',
+    locationLabel: '位置',
+    mapLabel: '地图',
+    publicPageLabel: '公开页面'
+  }
+}
+
 function getMailProvider(event: H3Event) {
   const config = useRuntimeConfig(event)
   return String(config.mailProvider || 'none').toLowerCase()
@@ -34,6 +75,25 @@ export function isMailDeliveryEnabled(event: H3Event) {
 function getMailFrom(event: H3Event) {
   const config = useRuntimeConfig(event)
   return String(config.mailFrom || 'SmartTag <no-reply@example.com>')
+}
+
+function readSmtpPort(value: unknown) {
+  const port = Number(value)
+  return Number.isInteger(port) && port > 0 ? port : 465
+}
+
+function readSmtpSecure(value: unknown, port: number) {
+  if (typeof value === 'string') {
+    const normalizedValue = value.trim().toLowerCase()
+    if (normalizedValue === 'true') {
+      return true
+    }
+    if (normalizedValue === 'false') {
+      return false
+    }
+  }
+
+  return port === 465
 }
 
 async function sendByResend(event: H3Event, message: MailMessage): Promise<MailSendResult> {
@@ -76,6 +136,57 @@ async function sendByResend(event: H3Event, message: MailMessage): Promise<MailS
     sent: true,
     mockMode: false,
     provider: 'resend'
+  }
+}
+
+async function sendBySmtp(event: H3Event, message: MailMessage): Promise<MailSendResult> {
+  const config = useRuntimeConfig(event)
+  const host = String(config.mailSmtpHost || '').trim()
+  const user = String(config.mailSmtpUser || '').trim()
+  const pass = String(config.mailSmtpPass || '')
+  const port = readSmtpPort(config.mailSmtpPort)
+  const secure = readSmtpSecure(config.mailSmtpSecure, port)
+
+  if (!host || !user || !pass) {
+    return {
+      sent: false,
+      mockMode: false,
+      provider: 'smtp',
+      error: 'SMTP 配置不完整'
+    }
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure,
+      auth: {
+        user,
+        pass
+      }
+    })
+
+    await transporter.sendMail({
+      from: getMailFrom(event),
+      to: message.to,
+      subject: message.subject,
+      text: message.text,
+      html: message.html
+    })
+
+    return {
+      sent: true,
+      mockMode: false,
+      provider: 'smtp'
+    }
+  } catch (error) {
+    return {
+      sent: false,
+      mockMode: false,
+      provider: 'smtp',
+      error: error instanceof Error ? error.message : 'SMTP 发送失败'
+    }
   }
 }
 
@@ -126,6 +237,10 @@ export async function sendMail(event: H3Event, message: MailMessage): Promise<Ma
 
   if (provider === 'resend') {
     return sendByResend(event, message)
+  }
+
+  if (provider === 'smtp') {
+    return sendBySmtp(event, message)
   }
 
   return {
@@ -210,6 +325,34 @@ export async function sendScanNotificationEmail(
       `时间: ${payload.scannedAt}`,
       `位置: ${payload.locationText}${mapText}`,
       `公开页: ${publicUrl}`
+    ].join('\n')
+  })
+}
+
+export async function sendLocalizedScanNotificationEmail(
+  event: H3Event,
+  payload: {
+    to: string
+    tagUid: string
+    displayName: string
+    scannedAt: string
+    locationText: string
+    mapUrl: string | null
+    locale?: PreferredLocale | null
+  }
+) {
+  const publicUrl = `${String(useRuntimeConfig(event).public.appUrl).replace(/\/$/, '')}/t/${payload.tagUid}`
+  const copy = buildLocalizedScanMail(payload.locale)
+  const mapText = payload.mapUrl ? `\n${copy.mapLabel}: ${payload.mapUrl}` : ''
+
+  return sendMail(event, {
+    to: payload.to,
+    subject: `${copy.subjectPrefix}: ${payload.displayName}`,
+    text: [
+      `${payload.displayName}${copy.scannedCopy}`,
+      `${copy.timeLabel}: ${payload.scannedAt}`,
+      `${copy.locationLabel}: ${payload.locationText}${mapText}`,
+      `${copy.publicPageLabel}: ${publicUrl}`
     ].join('\n')
   })
 }

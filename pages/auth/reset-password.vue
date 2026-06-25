@@ -3,6 +3,9 @@ const { t } = useI18n()
 const route = useRoute()
 const localePath = useLocalePath()
 const { getAuthErrorMessage } = useAuthErrorMessage()
+const devMailboxUrl = computed(() => {
+  return typeof route.query.mailbox === 'string' ? route.query.mailbox : ''
+})
 const hasPrefilledLink = computed(() => {
   return typeof route.query.email === 'string'
     && !!route.query.email
@@ -81,6 +84,11 @@ definePageMeta({
             {{ isLoading ? t('common.submitting') : t('auth.resetAction') }}
           </button>
         </form>
+        <div v-if="devMailboxUrl" class="auth-action-row">
+          <NuxtLink class="ghost-button" :to="localePath(devMailboxUrl)">
+            {{ t('auth.openDevMailboxAction') }}
+          </NuxtLink>
+        </div>
         <p class="form-note">{{ t('auth.resetFlowHint') }}</p>
         <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
         <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>

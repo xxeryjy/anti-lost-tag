@@ -3,10 +3,10 @@ const route = useRoute()
 const { t } = useI18n()
 const localePath = useLocalePath()
 const form = reactive({
-  uid: String(route.params.uid),
-  activationCode: 'AC-003-777'
+  uid: String(route.params.uid)
 })
 const activationRedirectPath = computed(() => `/tags/${form.uid}/activate`)
+const activationCode = computed(() => form.uid.trim())
 const { isLoading, errorMessage, successMessage, setSuccess } = useApiRequest()
 
 function activationErrorMessage(code?: string, statusCode?: number) {
@@ -30,8 +30,7 @@ function activationErrorMessage(code?: string, statusCode?: number) {
 
 async function submitActivation() {
   const uid = form.uid.trim()
-  const activationCode = form.activationCode.trim()
-  if (!uid || !activationCode) {
+  if (!uid || !activationCode.value) {
     errorMessage.value = t('tag.activateRequired')
     successMessage.value = ''
     return
@@ -46,7 +45,7 @@ async function submitActivation() {
       method: 'POST',
       body: {
         uid,
-        activationCode
+        activationCode: activationCode.value
       }
     })
 
@@ -84,7 +83,7 @@ useHead({
           </label>
           <label class="field-label">
             {{ t('tag.activationCode') }}
-            <input v-model="form.activationCode" type="text" />
+            <input :value="activationCode" type="text" readonly />
           </label>
           <button class="solid-button" type="submit" :disabled="isLoading">
             {{ isLoading ? t('common.submitting') : t('tag.activateAction') }}

@@ -19,9 +19,12 @@
     "@nuxtjs/i18n": "^9.1.5",
     "@pinia/nuxt": "^0.10.1",
     "@prisma/client": "^6.9.0",
+    "@vant/nuxt": "^1.0.7",
+    "nodemailer": "^9.0.1",
     "nuxt": "^3.16.2",
     "pinia": "^2.3.1",
     "prisma": "^6.9.0",
-    "sass": "^1.89.0"
+    "sass": "^1.89.0",
+    "vant": "^4.9.24"
   }
 }

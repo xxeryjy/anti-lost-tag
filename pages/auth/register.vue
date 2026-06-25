@@ -34,18 +34,16 @@ async function requestVerificationCode() {
   }
 
   const data = await run<{
-    accepted?: boolean
-    nextStep?: string
-    codeDelivery?: {
-      devMailboxUrl?: string | null
-    }
     devMailboxUrl?: string | null
-  }>(() => $fetch('/api/auth/verify-email/request', {
-    method: 'POST',
-    body: {
-      email: form.email
-    }
-  }))
+    accepted?: boolean
+  }>(async () => {
+    return $fetch('/api/auth/register/request-code', {
+      method: 'POST',
+      body: {
+        email: form.email
+      }
+    })
+  })
 
   if (!data) {
     setError(getAuthErrorMessage(errorCode.value), errorCode.value)
@@ -53,7 +51,7 @@ async function requestVerificationCode() {
   }
 
   hasRequestedCode.value = true
-  devMailboxUrl.value = data.devMailboxUrl || data.codeDelivery?.devMailboxUrl || ''
+  devMailboxUrl.value = data.devMailboxUrl || ''
   setSuccess(t('auth.verifyResentSuccess'))
 }
 
@@ -65,34 +63,15 @@ async function submitRegister() {
 
   const data = await run<{
     user: { email: string }
-  }>(async () => {
-    const registerResponse = await $fetch<{
-      success: true
-      data: {
-        user: { email: string }
-        codeDelivery?: {
-          devMailboxUrl?: string | null
-        }
-      }
-    }>('/api/auth/register', {
+  }>(() => $fetch('/api/auth/register', {
       method: 'POST',
       body: {
         email: form.email,
+        code: form.code,
         password: form.password,
         preferredLocale: form.preferredLocale
       }
-    })
-
-    devMailboxUrl.value = registerResponse.data.codeDelivery?.devMailboxUrl || ''
-
-    return $fetch('/api/auth/verify-email/confirm', {
-      method: 'POST',
-      body: {
-        email: form.email,
-        code: form.code
-      }
-    })
-  })
+    }))
 
   if (!data) {
     setError(getAuthErrorMessage(errorCode.value), errorCode.value)

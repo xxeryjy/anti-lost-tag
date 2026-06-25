@@ -170,7 +170,7 @@
     "verifyFlowHint": "Open the email link directly, or paste the verification code here to finish the step.",
     "resendVerificationAction": "Resend email",
     "openDevMailboxAction": "Open dev mailbox",
-    "forgotFlowHint": "We will send a password reset email. In local development mode, it will appear in the dev mailbox.",
+    "forgotFlowHint": "We will send a password reset email.",
     "resetFlowHint": "Open the reset link from email, or paste the code from the email here.",
     "errorEmailSendFailed": "The email could not be sent right now. Please try again later.",
     "sendVerificationAction": "Send code",
@@ -220,7 +220,8 @@
     "messageRateLimited": "Messages are being submitted too frequently. Please try again later.",
     "messageFailed": "Message submission failed. Please try again later.",
     "messagePrivacyNote": "To reduce spam, the same tag and source can only submit one message within a short time window.",
-    "backToOwnerDetail": "Back to tag detail"
+    "backToOwnerDetail": "Back to tag detail",
+    "lostBanner": "I AM LOST, PLEASE HELP!"
   },
   "tag": {
     "activateEyebrow": "Activate Tag",

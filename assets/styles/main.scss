@@ -15,6 +15,21 @@
   --radius-lg: 20px;
   --radius-md: 14px;
   --page-width: 1180px;
+  --van-font-family: 'Segoe UI', 'PingFang SC', 'Hiragino Sans', sans-serif;
+  --van-primary-color: var(--accent);
+  --van-success-color: var(--accent);
+  --van-danger-color: var(--danger);
+  --van-text-color: var(--text);
+  --van-text-color-2: var(--text-soft);
+  --van-background-2: rgba(255, 255, 255, 0.9);
+  --van-border-color: var(--line);
+  --van-radius-lg: 18px;
+  --van-nav-bar-height: 52px;
+  --van-nav-bar-background: rgba(247, 246, 241, 0.92);
+  --van-nav-bar-icon-color: var(--brand-deep);
+  --van-nav-bar-text-color: var(--brand-deep);
+  --van-nav-bar-title-text-color: var(--text);
+  --van-nav-bar-title-font-size: 17px;
 }
 
 * {
@@ -1192,6 +1207,8 @@ textarea {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
+  justify-content: flex-end;
 }
 
 .home-page-redesign .home-locale-switcher {
@@ -1268,6 +1285,10 @@ textarea {
   color: var(--brand-deep);
   background: rgba(255, 250, 244, 0.96);
   box-shadow: 0 12px 30px rgba(20, 16, 13, 0.18);
+}
+
+.home-page-redesign .home-nav-login {
+  white-space: nowrap;
 }
 
 .home-page-redesign .home-nav-toggle {
@@ -2053,7 +2074,6 @@ textarea {
   }
 
   .home-page-redesign .home-nav-links,
-  .home-page-redesign .home-nav-cta,
   .home-page-redesign .home-locale-switcher {
     display: none;
   }
@@ -2072,7 +2092,12 @@ textarea {
   }
 
   .home-page-redesign .home-nav-inner {
+    justify-content: space-between;
     padding: 14px 18px;
+  }
+
+  .home-page-redesign .home-nav-tools {
+    flex: 1;
   }
 
   .home-page-redesign .home-hero-content {
@@ -2182,6 +2207,7 @@ textarea {
   }
 
   .home-page-redesign .home-nav-inner {
+    justify-content: space-between;
     padding: 12px 14px;
   }
 

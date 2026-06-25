@@ -504,15 +504,34 @@ useHead({
 }
 
 .profile-edit-page :deep(.profile-photo-content) {
-  gap: 10px;
+  gap: 8px;
 }
 
 .profile-edit-page :deep(.profile-photo-description) {
   max-width: 30ch;
 }
 
+.profile-edit-page :deep(.profile-photo-caption) {
+  color: rgba(49, 95, 87, 0.72);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .profile-edit-page :deep(.profile-photo-actions) {
-  gap: 10px;
+  gap: 8px;
+}
+
+.profile-edit-page :deep(.profile-form-title) {
+  color: var(--brand-deep);
+  font-size: clamp(20px, 2.7vw, 24px);
+  line-height: 1.2;
+}
+
+.profile-edit-page :deep(.profile-photo-actions .outline-button) {
+  min-height: 38px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .profile-edit-page :deep(.toggle-row) {
@@ -579,8 +598,14 @@ useHead({
   }
 
   .profile-edit-page :deep(.profile-form-title) {
-    font-size: clamp(18px, 6vw, 22px);
-    line-height: 1.18;
+    font-size: clamp(17px, 5.2vw, 19px);
+    line-height: 1.2;
+  }
+
+  .profile-edit-page :deep(.profile-photo-actions .outline-button) {
+    min-height: 36px;
+    padding: 0 14px;
+    font-size: 12px;
   }
 
   .profile-edit-page :deep(.field-label input),

@@ -170,15 +170,16 @@ useHead({
                   {{ item.name }}
                 </NuxtLink>
               </div>
-            </details>
+            </details>
+
           </div>
         </div>
       </header>
 
-      <div class="surface-card owner-tags-panel">
+      <div class="surface-card owner-tags-panel home-reveal home-reveal-delay-2">
         <div class="owner-tags-header">
           <span class="eyebrow owner-tags-eyebrow">{{ t('dashboard.tagsEyebrow') }}</span>
-          <h1 class="section-title owner-tags-title">{{ t('dashboard.tagsTitle') }}</h1>
+          <!-- <h1 class="section-title owner-tags-title">{{ t('dashboard.tagsTitle') }}</h1> -->
         </div>
 
         <p v-if="errorMessage" class="alert-box alert-error owner-tags-feedback">{{ errorMessage }}</p>

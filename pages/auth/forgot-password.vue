@@ -6,7 +6,6 @@ const { getAuthErrorMessage } = useAuthErrorMessage()
 const form = reactive({
   email: typeof route.query.email === 'string' ? route.query.email : ''
 })
-const devMailboxUrl = ref('')
 const { isLoading, errorMessage, errorCode, successMessage, run, setSuccess, setError } = useApiRequest()
 
 async function submitForgotPassword() {
@@ -25,8 +24,9 @@ async function submitForgotPassword() {
     return
   }
 
-  devMailboxUrl.value = data.devMailboxUrl || ''
   setSuccess(t('auth.forgotSuccess'))
+  const mailboxQuery = data.devMailboxUrl ? `&mailbox=${encodeURIComponent(data.devMailboxUrl)}` : ''
+  await navigateTo(localePath(`/auth/reset-password?email=${encodeURIComponent(form.email)}${mailboxQuery}`))
 }
 
 useHead({
@@ -53,14 +53,6 @@ definePageMeta({
             {{ isLoading ? t('common.submitting') : t('auth.forgotAction') }}
           </button>
         </form>
-        <div v-if="devMailboxUrl" class="auth-action-row">
-          <NuxtLink class="ghost-button" :to="localePath(devMailboxUrl)">
-            {{ t('auth.openDevMailboxAction') }}
-          </NuxtLink>
-          <NuxtLink class="ghost-button" :to="localePath('/auth/login')">
-            {{ t('auth.loginAction') }}
-          </NuxtLink>
-        </div>
         <p class="form-note">{{ t('auth.forgotFlowHint') }}</p>
         <p v-if="errorMessage" class="alert-box alert-error">{{ errorMessage }}</p>
         <p v-if="successMessage" class="alert-box alert-success">{{ successMessage }}</p>

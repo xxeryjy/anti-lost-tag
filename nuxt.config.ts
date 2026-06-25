@@ -4,7 +4,10 @@ export default defineNuxtConfig({
     appManifest: false
   },
   css: ['~/assets/styles/main.scss'],
-  modules: ['@pinia/nuxt', '@nuxtjs/i18n'],
+  modules: ['@pinia/nuxt', '@nuxtjs/i18n', '@vant/nuxt'],
+  vant: {
+    importStyle: true
+  },
   runtimeConfig: {
     apiDataSource: process.env.API_DATA_SOURCE || 'mock',
     sessionSecret: process.env.SESSION_SECRET || 'dev-session-secret',
@@ -14,6 +17,11 @@ export default defineNuxtConfig({
     mailProvider: process.env.MAIL_PROVIDER || 'none',
     mailFrom: process.env.MAIL_FROM || '',
     mailApiKey: process.env.MAIL_API_KEY || '',
+    mailSmtpHost: process.env.MAIL_SMTP_HOST || '',
+    mailSmtpPort: process.env.MAIL_SMTP_PORT || '',
+    mailSmtpSecure: process.env.MAIL_SMTP_SECURE || '',
+    mailSmtpUser: process.env.MAIL_SMTP_USER || '',
+    mailSmtpPass: process.env.MAIL_SMTP_PASS || '',
     uploadMaxImageSizeBytes: process.env.UPLOAD_MAX_IMAGE_SIZE_BYTES || `${5 * 1024 * 1024}`,
     uploadImageRateLimitMax: process.env.UPLOAD_IMAGE_RATE_LIMIT_MAX || '20',
     uploadImageRateLimitWindowMs: process.env.UPLOAD_IMAGE_RATE_LIMIT_WINDOW_MS || `${60 * 60 * 1000}`,
